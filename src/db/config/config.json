@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "upperdata",
+    "password": "(1Juan-1:9*",
+    "database": "go-dev-07262023",
+    "host": "localhost",
+    "dialect": "postgresql"
+  },
+  "test": {
+    "username": "go",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "postgresql"
+  },
+  "production": {
+    "username": "go",
+    "password": "Y¿0,45/uD&0.",
+    "database": "cema11022022-prod",
+    "host": "127.0.0.1",
+    "dialect": "postgresql"
+  }
+}
