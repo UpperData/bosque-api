@@ -140,7 +140,7 @@ async function loginAccount(req,res){
     const{nick,pass}=req.body;
    
     let  email=null;
-    let name=null;
+    let phone=null;
     let dateTime=new Date();    
     if(await utils.validMail(nick)){
         email=nick;
