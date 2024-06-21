@@ -38,6 +38,14 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type:DataTypes.STRING,
       defaultValue:"N/A"
+    },
+    minStock: {
+      type:DataTypes.INTEGER,
+      defaultValue:"1"
+    },
+    image: {
+      type:DataTypes.STRING,
+      defaultValue:"https://drive.google.com/file/d/1rNxJwQRgurZpeSyw8FJl98QRarzqjYCR/view?usp=sharing"
     }
   }, {
     sequelize,

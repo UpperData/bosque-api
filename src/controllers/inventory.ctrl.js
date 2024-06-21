@@ -128,16 +128,16 @@ async function assignmentUpdate(req,res){
 }
 
 async function articleNew(req,res){
-    const{name,description,existence}=req.body;
+    const{name,description,existence,minStock,image}=req.body;
     console.log("req.body")
    
     const t=await model.sequelize.transaction();
     var maxArticle=await model.sequelize.query("SELECT max(id) + 1 as proximo from articles");    
     await model.article.create({id:maxArticle[0][0].proximo,name,description},{transaction:t},{returning: true}).
         then(async function(rsArticle){
-            await model.inventory.create({articleId:rsArticle.id,existence},{transaction:t}).then(async function(rsArticle){
+            await model.inventory.create({articleId:rsArticle.id,existence,minStock,image},{transaction:t}).then(async function(rsArticle){
                 t.commit();
-                res.status(200).json({data:{"result":true,"message":"Nuevo articulo agregado satisfactoriamente"}});            
+                res.status(200).json({data:{"result":true,"message":"Nuevo artículo agregado satisfactoriamente"}});            
             }).catch(async function(error){
                 console.log(error);
                 t.rollback();
