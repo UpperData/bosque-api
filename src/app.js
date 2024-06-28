@@ -52,6 +52,6 @@ app.use(require('./routes/publishing.route'));
 app.use(require('./routes/shoppingCar.route'))
 
 app.listen(app.get('port'),function(){
-    console.log('repuestosGO is working in port:', app.get('port'));
+    console.log('Bosque Marino is working in port:', app.get('port'));
 
 })

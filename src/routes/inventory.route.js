@@ -1,6 +1,7 @@
 const express =require ('express');
 const router= express.Router();
 const inventory=require('../controllers/inventory.ctrl');
+const lots=require('../controllers/lots.ctrl');
 const auth=require('../controllers/middleware/auth.ctrl');
 const forceBrute=require('../controllers/middleware/noBrute.ctrl');
 
@@ -13,6 +14,13 @@ router.get('/InVETorY/aRIcLe/list/:id',forceBrute.notBruteSecure,auth.autorizedR
 router.get('/InveTorY/get/ALL',forceBrute.notBruteSecure,auth.autorizedRole(['*']),inventory.inventoryTotal);//obtiene inventario actula
 router.put('/InvEToRY/UpdaTE/ARTICLE',forceBrute.notBruteSecure,auth.autorizedRole([5]),inventory.inventoryUpdate);//actualiza inventario 
 router.get('/InvEToRY/revoke/assignament/:id',forceBrute.notBruteSecure,auth.autorizedRole([5]),inventory.assignmentRevoke);//revocar asignación
-router.get('/INVETORY/articles/*',forceBrute.notBruteSecure,inventory.returnArticleArray) // Retorna arreglo de articulos del carriro)
-
+router.get('/INVETORY/articles/*',forceBrute.notBruteSecure,inventory.returnArticleArray); // Retorna arreglo de articulos del carriro)
+// Lotes
+router.post('/inVenTory/LOTS',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.lotCreate);
+router.get('/inVenTory/LotS/:articleId/:isActived',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.lotArticle);
+router.put('/inVenTory/LotS/',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.lotEdit);
+ // Items lot
+router.post('/inVenTory/LotS/ITEMS',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.itemLotCreate);
+router.put('/inVenTory/LotS/ITEMS',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.itemLotupdate);
+router.get('/inVenTory/LotS/ITEMS/fInd/:id',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.itemLotFind);
 module.exports=router;
