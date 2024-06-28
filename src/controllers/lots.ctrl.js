@@ -12,8 +12,7 @@ async function itemLotFind(req,res){ // traer items
         res.status(200).json({data:{"result":true,"data":rsItemsLot}}); 
         
     }).catch(async function(error){   
-        console.log(error)     ;
-        t.rollback();
+        console.log(error);
         res.status(403).json({data:{"result":false,"message":error.message}});
     })       
 }
