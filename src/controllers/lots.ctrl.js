@@ -140,6 +140,10 @@ async function lotArticle(req,res){
         include:[{
             model:model.itemLot,
             attributes: {exclude: ['audit','createdAt','updatedAt']}
+            ,include:[{
+                model:model.condition,
+                attributes: {exclude: ['createdAt','updatedAt']}
+            }]
         }]
     })
     .then(async function(rsLots){
@@ -162,7 +166,8 @@ async function lotArticle(req,res){
         }else{
             res.status(200).json({data:{"result":true,"message":"No existe lote consultado"}}); 
         }    */    
-    }).catch(async function(error){                
+    }).catch(async function(error){ 
+        console.log(error)               
         res.status(403).json({data:{"result":false,"message":"Algo salió mal, intente nuevamente"}});
     })
 }
