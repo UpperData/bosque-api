@@ -3,6 +3,7 @@ const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 const generals=require('./generals.ctrl');
 var moment=require('moment');
+const { raw } = require('express');
 
 async function itemLotFind(req,res){ // traer items 
     const{id}=req.params
@@ -138,15 +139,25 @@ async function lotArticle(req,res){
             isActived
         })},
         include:[{
+            required:true,
             model:model.itemLot,
             attributes: {exclude: ['audit','createdAt','updatedAt']}
-            ,include:[{
-                model:model.condition,
-                attributes: {exclude: ['createdAt','updatedAt']}
-            }]
+            
         }]
     })
     .then(async function(rsLots){
+        if(rsLots){
+            for (let i = 0; i < rsLots.length; i++) {                              
+                for (let index = 0; index < rsLots[i].itemLots.length; index++) {
+                    await model.condition.findAll({
+                        attributes: {exclude: ['createdAt','updatedAt']},
+                        where:{id:rsLots[i].itemLots[index].conditionId}
+                    }).then(async function(rsCondition){
+                        rsLots[i].itemLots[index].dataValues.conditionName=rsCondition[0].name                       
+                    })
+                }            
+            }
+        }
         res.status(200).json({data:{"result":true,"data":rsLots}}); 
         /*if(rsLots.length>0){
             let items=[];
