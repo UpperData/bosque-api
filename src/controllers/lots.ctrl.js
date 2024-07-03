@@ -149,11 +149,11 @@ async function lotArticle(req,res){
         if(rsLots){
             for (let i = 0; i < rsLots.length; i++) {                              
                 for (let index = 0; index < rsLots[i].itemLots.length; index++) {
-                    await model.condition.findAll({
+                    await model.condition.findOne({
                         attributes: {exclude: ['createdAt','updatedAt']},
                         where:{id:rsLots[i].itemLots[index].conditionId}
                     }).then(async function(rsCondition){
-                        rsLots[i].itemLots[index].dataValues.conditionName=rsCondition[0].name                       
+                        rsLots[i].itemLots[index].dataValues.conditionName=rsCondition.name                       
                     })
                 }            
             }
@@ -198,7 +198,7 @@ async function lotCreate(req,res){ // crea un nuevo lote de articulos
     await model.lots.create({articleId,receivedDate,expDate,isActived,note,audit},{transaction:t})
     .then(async function(rslot){
         let insert_items=0
-        if(items.length>0){
+        if(items.length>0){ // Registra Items
             for (let index = 0; index < items.length; index++) {
                 await model.itemLot.create({lotId:rslot.id,weight:items[index].weight,conditionId:items[index].conditionId,note:items[index].note,itemLot:index + 1,audit},{transaction:t})
                 .then(async function(rsItemsLot){
@@ -212,11 +212,11 @@ async function lotCreate(req,res){ // crea un nuevo lote de articulos
             }
             if(insert_items==items.length){
                 t.commit(); 
-                res.status(200).json({data:{"result":true,"message":"Lote registrado satisfactoriamente"}});              
+                res.status(200).json({data:{"result":true,"message":"Lote registrado"}});              
             }    
-        }else{
-            t.rollback();
-            res.status(403).json({data:{"result":false,"message":"No puede registrar lotes vacios, ingrese items"}});
+        }else{ // no regsitra item y da respuesta
+            t.commit(); 
+            res.status(200).json({data:{"result":true,"message":"Lote registrado"}}); 
         }            
     }).catch(async function(error){        
         t.rollback();
