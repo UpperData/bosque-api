@@ -138,6 +138,7 @@ async function lotArticle(req,res){
         ...(isActived == "true" ||  isActived == "false" &&{
             isActived
         })},
+        order:['receivedDate'],
         include:[{            
             model:model.itemLot,
             attributes: {exclude: ['audit','createdAt','updatedAt']}
