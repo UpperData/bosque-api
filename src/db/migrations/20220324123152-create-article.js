@@ -7,27 +7,30 @@ module.exports = {
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
-      },
-      storeId:{
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        autoIncrement: true //,
-        //references:{model:{tableName:'stores',schema:'public'},key:'id'}        
-      },
+      },      
       isActived:{
         type: Sequelize.BOOLEAN,
         allowNull: false
       },
-      doctorId:{
-        type: Sequelize.INTEGER,
-        allowNull: true
+      price:{
+        type: Sequelize.STRING,
+        allowNull: false
                
       },
+      minStock:{
+        type: Sequelize.STRING,
+        allowNull: false               
+      },
       name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       description: {
         type: Sequelize.STRING
+      },      
+      isSUW:{ // Sale by unit weight
+        type: Sequelize.BOOLEAN,
+        allowNull: false
       },
       createdAt: {
         allowNull: false,

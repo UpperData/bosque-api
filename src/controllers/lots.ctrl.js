@@ -129,7 +129,7 @@ async function lotEdit(req,res){
 }
 async function lotArticle(req,res){
     const{articleId,isActived}=req.params;    
-    if (typeof (isActived) === "boolean") {}
+    //if (typeof (isActived) === "boolean") {}
     await model.lots.findAll(
     { 
         attributes: {exclude: ['audit','createdAt','updatedAt']},
@@ -212,7 +212,7 @@ async function lotCreate(req,res){ // crea un nuevo lote de articulos
             }
             if(insert_items==items.length){
                 t.commit(); 
-                res.status(200).json({data:{"result":true,"message":"Lote registrado"}});              
+                res.status(200).json({data:{"result":true,"message":"Lote "+rslot.id+" registrado"}});              
             }    
         }else{ // no regsitra item y da respuesta
             t.commit(); 

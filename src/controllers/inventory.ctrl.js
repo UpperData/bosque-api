@@ -3,6 +3,8 @@ const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 const generals=require('./generals.ctrl');
 const { compareSync } = require('bcryptjs');
+const { where } = require('sequelize/lib/sequelize');
+const { raw } = require('express');
 
 
 async function assignmentNew(req,res){
@@ -128,73 +130,130 @@ async function assignmentUpdate(req,res){
 }
 
 async function articleNew(req,res){
-    const{name,description,existence,minStock,image}=req.body;
-    console.log("req.body")
-   
+    const{name,description,minStock,image,price,isSUW}=req.body;
     const t=await model.sequelize.transaction();
     var maxArticle=await model.sequelize.query("SELECT max(id) + 1 as proximo from articles");    
-    await model.article.create({id:maxArticle[0][0].proximo,name,description},{transaction:t},{returning: true}).
+    await model.article.create({id:maxArticle[0][0].proximo,name,description,minStock,image,price,isSUW},{transaction:t},{returning: true}).
         then(async function(rsArticle){
-            await model.inventory.create({articleId:rsArticle.id,existence,minStock,image},{transaction:t}).then(async function(rsArticle){
-                t.commit();
-                res.status(200).json({data:{"result":true,"message":"Nuevo artículo agregado satisfactoriamente"}});            
-            }).catch(async function(error){
-                console.log(error);
-                t.rollback();
-                res.status(403).json({data:{"result":false,"message":error.message}});
-        })
+            t.commit();
+            res.status(200).json({data:{"result":true,"message":"Artículo agregado"}});
     }).catch(async function(error){       
-        console.log(error);
         t.rollback();
         res.status(403).json({data:{"result":false,"message":error.message}});
     })
 }
 async function articleUpdate(req,res){
     const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
-    const{id,name,description}=req.body;
+    const{id,name,description,isActived,price,minStock,image,isSUW}=req.body;
     const t=await model.sequelize.transaction();
-    await model.article.update({name,description},{where:{id,storeId:dataToken['data']['shop'].id}},{transaction:t}).then(async function(rsArticle){
+    await model.article.update({name,description,isActived,price,minStock,image,isSUW},{where:{id}},{transaction:t}).then(async function(rsArticle){
         t.commit();
-        res.status(200).json({data:{"result":true,"message":"Articulo actualizado satisfactoriamente"}});
+        res.status(200).json({data:{"result":true,"message":"Artículo actualizado"}});
     }).catch(async function(error){
         t.rollback();
         res.status(403).json({data:{"result":false,"message":error.message}});
     })
 }
-async function articlelist(req,res){    
-    const {id}=req.params;
-    if(id!='*'){        
-        return await model.article.findAll({
-            attributes:['id','name','description'],
-            where:{id,isActived}
+async function inventoryGet(req,res){    
+    const {articelId,isArtActived,isLotActived,conditionId}=req.params;
+    if(articelId!='*'){        
+        return await model.article.findOne({
+            attributes:['id','name','description','price','image','minStock','isSUW','isActived'],
+            where:{
+                id:articelId,
+                isActived:isArtActived 
+                /* ...(isArtActived == "true" ||  isArtActived == "false" && {
+                    isActived:isArtActived}) */
+            },
+            include:[{
+                model:model.lots,
+                attributes:{exclude:['audit','updatedAt','createdAt']} ,                   
+                where:{ isActived:isLotActived},
+                require:true,             
+                include:[{
+                    model:model.itemLot,
+                    attributes:{exclude:['audit','updatedAt','createdAt']},
+                    where:{ conditionId},
+                    required:true
+                }]
+            }]
         }).then(async function(rsArticle){
             if(rsArticle){
                 res.status(200).json({"data":{"result":true,"message":"Busqueda satisfatoria","data":rsArticle}});        
             }else{
-                res.status(403).json({"data":{"result":false,"message":"No existe registro con este código"}});            
+                res.status(403).json({"data":{"result":false,"message":"No se encontraron registros"}});            
             }            
         }).catch(async function(error){  
             res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando registro"}});        
         })
     }else{        
-        return await model.article.findAll(            
-            { attributes:['id','name','description'],
-           order:['id']}).then(async function(rsArticle){
-            res.status(200).json({"data":{"result":true,"message":"Busqueda satisfatoria","data":rsArticle}});        
-        }).catch(async function(error){            
+        return await model.article.findAll({
+            attributes:['id','name','description','price','image','minStock','isSUW','isActived'],
+            where:{
+                isActived:isArtActived 
+            },
+            include:[{
+                model:model.lots,
+                attributes:{exclude:['audit','updatedAt','createdAt']} ,                   
+                where:{ isActived:isLotActived},
+                require:true,             
+                include:[{
+                    model:model.itemLot,
+                    attributes:{exclude:['audit','updatedAt','createdAt']},
+                    where:{ conditionId},
+                    required:true
+                }]
+            }]
+        }).then(async function(rsArticle){
+            if(rsArticle){
+                res.status(200).json({"data":{"result":true,"message":"Busqueda satisfatoria","data":rsArticle}});        
+            }else{
+                res.status(403).json({"data":{"result":false,"message":"No se encontraron registros"}});            
+            }            
+        }).catch(async function(error){  
+            res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando registro"}});        
+        })
+    }    
+}
+async function articlelist(req,res){    
+    const {id}=req.params;
+    if(id!='*'){        
+        return await model.article.findOne({
+            attributes:['id','name','description','minStock','price','image','isSUW'],
+            where:{id,isActived:true}
+        }).then(async function(rsArticle){
+            if(rsArticle){
+                res.status(200).json({"data":{"result":true,"message":"Busqueda satisfatoria","data":rsArticle}});        
+            }else{
+                res.status(403).json({"data":{"result":false,"message":"No existe artículo con este código"}});            
+            }            
+        }).catch(async function(error){  
+            res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando registro"}});        
+        })
+    }else{        
+        return await model.article.findAll({
+            attributes:['id','name','description','minStock','price','image','isSUW'],
+            where:{isActived:true}
+        }).then(async function(rsArticle){
+            if(rsArticle){
+                res.status(200).json({"data":{"result":true,"message":"Busqueda satisfatoria","data":rsArticle}});        
+            }else{
+                res.status(403).json({"data":{"result":false,"message":"No existe artículo con este código"}});            
+            }            
+        }).catch(async function(error){                        
             res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando registro"}});        
         })
     }    
 }
 async function inventoryAdd(req,res){
-    const {articleId,existence,minSctock,price,category,sku,autoType,filter, description,tags, photo}=req.body
+    const {articleId,existence,minStock,price,category,sku,autoType,filter, description,tags, photo}=req.body
     await model.inventory.findAndCountAll({articleId,isActived:true})
     .then(async function(rsFind){
 
         if(rsFind.count>0){ // inventory update
 
         }else{
-            await model.inventory.create({articleId,existence,minSctock,price,category,sku,filter, description,tags, photo})
+            await model.inventory.create({articleId,existence,minStock,price,category,sku,filter, description,tags, photo})
             .then(async function(rsInventoryCreate){
 
             })
@@ -308,4 +367,6 @@ module.exports={assignmentNew
     ,inventoryTotal
     ,inventoryUpdate
     ,assignmentRevoke
-    ,returnArticleArray};
+    ,returnArticleArray
+    ,inventoryGet
+};

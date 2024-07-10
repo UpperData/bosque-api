@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      article.hasMany(models.assignment);
+      article.hasMany(models.lots);
     }
   }
   article.init({  
@@ -43,9 +43,18 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.INTEGER,
       defaultValue:"1"
     },
+    price: {
+      type:DataTypes.STRING,
+      defaultValue:"0"
+    },
     image: {
       type:DataTypes.STRING,
-      defaultValue:"https://drive.google.com/file/d/1rNxJwQRgurZpeSyw8FJl98QRarzqjYCR/view?usp=sharing"
+      defaultValue:"http://147.135.93.82/BM/genericImage.png"
+    },
+    isSUW:{ // Sale by Unit Weight
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue:true
     }
   }, {
     sequelize,
