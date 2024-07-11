@@ -179,12 +179,12 @@ async function inventoryGet(req,res){
             }]
         }).then(async function(rsArticle){
             if(rsArticle){
-                res.status(200).json({"data":{"result":true,"message":"Busqueda satisfatoria","data":rsArticle}});        
+                res.status(200).json({"result":true,"message":"Busqueda satisfatoria","data":rsArticle});        
             }else{
-                res.status(403).json({"data":{"result":false,"message":"No se encontraron registros"}});            
+                res.status(403).json({"result":false,"message":"No se encontraron registros"});            
             }            
         }).catch(async function(error){  
-            res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando registro"}});        
+            res.status(403).json({"result":false,"message":"Algo salió mal buscando registro"});        
         })
     }else{        
         return await model.article.findAll({
@@ -206,12 +206,12 @@ async function inventoryGet(req,res){
             }]
         }).then(async function(rsArticle){
             if(rsArticle){
-                res.status(200).json({"data":{"result":true,"message":"Busqueda satisfatoria","data":rsArticle}});        
+                res.status(200).json({"result":true,"message":"Busqueda satisfatoria","data":rsArticle});        
             }else{
-                res.status(403).json({"data":{"result":false,"message":"No se encontraron registros"}});            
+                res.status(403).json({"result":false,"message":"No se encontraron registros"});            
             }            
         }).catch(async function(error){  
-            res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando registro"}});        
+            res.status(403).json({"result":false,"message":"Algo salió mal buscando registro"});        
         })
     }    
 }
