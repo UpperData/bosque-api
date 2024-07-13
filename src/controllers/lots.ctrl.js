@@ -23,11 +23,11 @@ async function itemLotByArticle(req,res){ // trar lote DISPONIBLES
     })
     .then(async function(rsItemsLot){                
         
-        res.status(200).json({data:{"result":true,"data":rsItemsLot}}); 
+        res.status(200).json({"result":true,"data":rsItemsLot}); 
         
     }).catch(async function(error){   
         console.log(error);
-        res.status(403).json({data:{"result":false,"message":error.message}});
+        res.status(403).json({"result":false,"message":error.message});
     })       
 }
 
