@@ -3,7 +3,34 @@ const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 const generals=require('./generals.ctrl');
 var moment=require('moment');
-const { raw } = require('express');
+
+async function itemLotByArticle(req,res){ // trar lote DISPONIBLES
+    const{articleId}=req.params
+    await model.itemLot.findAll({
+        attributes:{exclude:['audit','createdAt','updatedAt']},  
+        where:{conditionId:1},        
+        include:[{
+            model:model.lots,
+            attributes:['id'],         
+            where:{isActived:true},
+            include:[{
+                model:model.article,
+                attributes:['id'],
+                where:{id:articleId,isActived:true}
+            }]           
+        }],
+        raw:true
+    })
+    .then(async function(rsItemsLot){                
+        
+        res.status(200).json({data:{"result":true,"data":rsItemsLot}}); 
+        
+    }).catch(async function(error){   
+        console.log(error);
+        res.status(403).json({data:{"result":false,"message":error.message}});
+    })       
+}
+
 
 async function itemLotFind(req,res){ // traer items 
     const{id}=req.params
@@ -223,4 +250,4 @@ async function lotCreate(req,res){ // crea un nuevo lote de articulos
         res.status(403).json({data:{"result":false,"message":error.message}});
     })
 }
-module.exports={lotCreate,lotArticle,lotEdit,itemLotCreate,itemLotupdate,itemLotFind}
+module.exports={lotCreate,lotArticle,lotEdit,itemLotCreate,itemLotupdate,itemLotFind,itemLotByArticle}

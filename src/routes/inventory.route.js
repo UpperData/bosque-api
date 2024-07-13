@@ -28,4 +28,5 @@ router.put('/inVenTory/LotS/',forceBrute.notBruteSecure,auth.autorizedRole(['*']
 router.post('/inVenTory/LotS/ITEMS',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.itemLotCreate);
 router.put('/inVenTory/LotS/ITEMS',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.itemLotupdate);
 router.get('/inVenTory/LotS/ITEMS/fInd/:id',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.itemLotFind);
+router.get('/Inventory/Itemlot/true/:articleId',forceBrute.notBruteSecure,lots.itemLotByArticle);
 module.exports=router;

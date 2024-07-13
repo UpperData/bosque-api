@@ -12,7 +12,10 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      lots.hasMany(models.itemLot);
+      
+     
+      lots.belongsTo(models.article);
+      lots.hasMany(models.itemLot)
     }
   }
   lots.init({
