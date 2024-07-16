@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
       itemLot.belongsTo(models.lots)
     }
   }
-  itemLot.init({    
+  itemLot.init({     
     lotId: DataTypes.INTEGER,    
     weight: DataTypes.DECIMAL,
     conditionId: DataTypes.INTEGER,

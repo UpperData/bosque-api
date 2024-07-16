@@ -7,7 +7,7 @@ var moment=require('moment');
 async function itemLotByArticle(req,res){ // trar lote DISPONIBLES
     const{articleId}=req.params
     await model.itemLot.findAll({
-        attributes:{exclude:['id','lotId','audit','createdAt','updatedAt']},  
+        attributes:{exclude:['lotId','audit','createdAt','updatedAt']},  
         where:{conditionId:1},        
         include:[{
             model:model.lots,
