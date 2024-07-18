@@ -31,12 +31,7 @@ module.exports = (sequelize, DataTypes) => {
         args: true,
         msg: 'Número de telefono ya esta en uso!'
       },
-      allowNull: false,
-      validate:{
-        notNull: {
-          msg: 'Por favor ingrese un número de telefono  !'
-        }
-      }
+      allowNull: true,
     },
     name: {
       type: DataTypes.STRING,      
@@ -73,7 +68,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     token:{
-      allowNull: false,
+      allowNull: true,
       type: DataTypes.STRING
     },
     phone:{

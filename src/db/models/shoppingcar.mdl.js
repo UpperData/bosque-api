@@ -11,12 +11,17 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      shoppingCar.belongsTo(models.account)
+      shoppingCar.belongsTo(models.account);
+      shoppingCar.belongsTo(models.itemLot);
+      shoppingCar.belongsTo(models.orderStatus);
     }
   }
   shoppingCar.init({
     accountId: DataTypes.INTEGER,
-    items: DataTypes.JSONB
+    itemLotId: DataTypes.INTEGER,
+    dispatch: DataTypes.STRING,
+    orderStatusId:DataTypes.INTEGER,
+    audit:DataTypes.JSONB
   }, {
     sequelize,
     modelName: 'shoppingCar',

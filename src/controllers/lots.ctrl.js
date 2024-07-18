@@ -15,7 +15,7 @@ async function itemLotByArticle(req,res){ // trar lote DISPONIBLES
             where:{isActived:true},
             include:[{
                 model:model.article,
-                attributes:['price'],
+                attributes:['price','isSUW'],
                 where:{id:articleId,isActived:true}
             }]           
         }],

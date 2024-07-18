@@ -10,9 +10,27 @@ module.exports = {
       },
       accountId: {
         allowNull: false,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,        
+        references:{
+          model:{tableName:'account',shema:'public'},key:'id'
+        }
+        
       },
-      items: {
+      itemLotId: {
+        type: Sequelize.JSONB,
+        allowNull: false,        
+        references:{
+          model:{tableName:'itemLot',shema:'public'},key:'id'
+        }
+      },
+      orderSatusId: {
+        type: Sequelize.JSONB,
+        allowNull: false,
+        references:{
+          model:{tableName:'orderStatuses',shema:'public'},key:'id'
+        }
+      },
+      dispatch: {
         type: Sequelize.JSONB,
         allowNull: false,
       },
@@ -24,7 +42,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
-    });
+    },);
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('shoppingCars');

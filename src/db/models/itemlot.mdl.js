@@ -12,7 +12,9 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       itemLot.belongsTo(models.condition);
-      itemLot.belongsTo(models.lots)
+      itemLot.belongsTo(models.lots);
+      itemLot.hasMany(models.shoppingCar);
+     
     }
   }
   itemLot.init({     
