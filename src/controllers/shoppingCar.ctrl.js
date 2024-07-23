@@ -100,7 +100,8 @@ async function AddShoppingCar(req,res){
                             t.commit();
                             res.status(200).json({"result":true,"message":"Ok. Reserva exitosa"}); 
                         }).catch(async function(error){    
-                            t.rollback();                               
+                            t.rollback(); 
+                            console.log(error);                              
                             res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
                         })
                     }).catch(async function(error){                                  
