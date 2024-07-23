@@ -99,23 +99,29 @@ async function AddShoppingCar(req,res){
                         .then(async function(rsCar){                       
                             t.commit();
                             res.status(200).json({"result":true,"message":"Ok. Reserva exitosa"}); 
-                        }).catch(async function(error){                                   
+                        }).catch(async function(error){    
+                            t.rollback();                               
                             res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
                         })
                     }).catch(async function(error){                                  
+                        t.rollback();
                         res.status(403).json({"result":false,"message":"Error reservando producto, intente nuevamente"});        
                     })
                     
                 }else{// cuenta inactiva
-                    res.status(200).json({"result":false,"message":"No posee una cuenta activa para comprar"});        
+                    t.rollback();
+                    res.status(403).json({"result":false,"message":"No posee una cuenta activa para comprar"});        
                 }
             }).catch(async function(error){                           
+                t.rollback();
                 res.status(403).json({"result":false,"message":"No se pudo validar su usuario, intente nuevamente"});        
             })            
         } else{// Producto no disponible
-            res.status(200).json({"result":false,"message":"Ya no esta disponible el producto, elija otro."});        
+            t.rollback();
+            res.status(403).json({"result":false,"message":"Ya no esta disponible el producto, elija otro."});        
         }
     }).catch(async function(error){                   
+        t.rollback();
         res.status(403).json({"result":false,"message":"No se pudo validar su producto, intente nuevamente"});        
     }) 
     
