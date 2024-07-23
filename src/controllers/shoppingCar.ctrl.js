@@ -93,7 +93,7 @@ async function AddShoppingCar(req,res){
             await model.account.findAndCountAll({attributes:['id'],where:{id:accountId,isActived:true}})
             .then(async function(rsAccount){
                 if(rsAccount.count>0){ // cuenta activa
-                    await model.itemLot.update({conditionId:2},{where:{id:itemLotId}},{transaction:t}) // actualiza item a reservado
+                    await model.itemLot.update({conditionId:2},{where:{id:itemLotId},transaction:t}) // actualiza item a reservado
                     .then(async function(rsCondition){
                         await model.shoppingCar.create({itemLotId,accountId,dispatch,orderStatusId:1,audit},{transaction:t})
                         .then(async function(rsCar){                       
