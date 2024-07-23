@@ -4,8 +4,9 @@ const serviceToken=require('./serviceToken.ctrl');
 var moment=require('moment');
 const { raw } = require('express');
 async function getShoppingCar(req,res){ // busca especia de un carrito
-    const {accountId} = req.params;
-
+  const {accountId} = req.params;
+  let totalDolar=0;
+  let totalItems=0;
 
   return await model.article.findAll({
     attributes:['id','name','image','description','price'],    
@@ -21,6 +22,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
                 model:model.shoppingCar,
                     attributes:['id','dispatch'],
                     required:true,
+                    where:{orderStatusId:{[Op.lte]:3}},
                     include:[{                        
                         model:model.account,
                         attributes:['id','name','phone'],
@@ -38,35 +40,48 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
     }]
   }).then(async function(rsCar){
     
-    let carResponse=[];
-    let carLot=[];
-    for (let index = 0; index <  rsCar.length; index++) {
-        carResponse.push({
-            id:rsCar[index].id,
-            name:rsCar[index].name,
-            description:rsCar[index].description,
-            image:rsCar[index].image,
-            price:rsCar[index].price,
-            carLot:[]
+    let itemOrder=[];
+    let ProductItems=[];
+    for (let index = 0; index <  rsCar.length; index++) { //nivel artículo
+        itemOrder.push({
+            productId:rsCar[index].id,
+            productName:rsCar[index].name,
+            productDescription:rsCar[index].description,
+            productImage:rsCar[index].image,
+            productPrice:rsCar[index].price,
+            productSubTotal:0,
+            productNumItem:0,
+            ProductItems:[]
         });        
-        for (let Jindex = 0; Jindex <  rsCar[index]['lots'].length; Jindex++) {          
+        let subT=0.0;
+        for (let Jindex = 0; Jindex <  rsCar[index]['lots'].length; Jindex++) {  // nivel lote        
             if(rsCar[index]['lots'].length>0){
-                for (let Kindex = 0; Kindex <  rsCar[index]['lots'][Jindex]['itemLots'].length; Kindex++) {
+                for (let Kindex = 0; Kindex <  rsCar[index]['lots'][Jindex]['itemLots'].length; Kindex++) { // Nivel item lote
                     let salePrice=rsCar[index]['lots'][Jindex]['itemLots'][Kindex].weight * rsCar[index].price;
                     let weight=rsCar[index]['lots'][Jindex]['itemLots'][Kindex].weight
-                    carLot.push({ 
-                        id:rsCar[index]['lots'][Jindex]['itemLots'][Kindex].id,
-                        weight:parseFloat(weight).toFixed(2),
-                        note:rsCar[index]['lots'][Jindex]['itemLots'][Kindex].note,
-                        price:salePrice.toFixed(2)
-                    });
-                }                
-            }                                           
-        }        
-        carResponse[index].carLot=carLot; 
-        carLot=[]; 
+                    subT =subT + parseFloat(salePrice);
+                    for (let Mindex = 0; Mindex <  rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'].length; Mindex++) {  // nivel shoppingCar
+                        ProductItems.push({ 
+                            id:rsCar[index]['lots'][Jindex]['itemLots'][Kindex].id,
+                            weight:parseFloat(weight).toFixed(2),                            
+                            dispatch:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch,
+                            price:salePrice.toFixed(2)
+                        });
+
+                    }
+                    
+                }         
+            }
+        }
+        itemOrder[index].productNumItem=ProductItems.length; // numero te productos de un mismo tipo
+        itemOrder[index].productSubTotal=subT//sub total
+        itemOrder[index].ProductItems=ProductItems;
+        totalDolar += subT;
+        totalItems += ProductItems.length;
+        subT =0;
+        ProductItems=[]; 
     } 
-    res.status(200).json({"result":true,"message":"Busqueda satisfactoria","data":carResponse}); 
+    res.status(200).json({"result":true,"message":"Busqueda satisfactoria","data":{accountId,totalDolar,totalItems,itemOrder}}); 
   }).catch(async function(error){    
     console.log(error);         
     res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
@@ -100,13 +115,11 @@ async function AddShoppingCar(req,res){
                             t.commit();
                             res.status(200).json({"result":true,"message":"Ok. Reserva exitosa"}); 
                         }).catch(async function(error){    
-                            t.rollback(); 
-                            console.log(error);                              
+                            t.rollback();                                                       
                             res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
                         })
                     }).catch(async function(error){                                  
-                        t.rollback();
-                        console.log(error);
+                        t.rollback();                        
                         res.status(403).json({"result":false,"message":"Error reservando producto, intente nuevamente"});        
                     })
                     
