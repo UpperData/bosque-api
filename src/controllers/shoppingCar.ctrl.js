@@ -105,6 +105,7 @@ async function AddShoppingCar(req,res){
                         })
                     }).catch(async function(error){                                  
                         t.rollback();
+                        console.log(error);
                         res.status(403).json({"result":false,"message":"Error reservando producto, intente nuevamente"});        
                     })
                     
