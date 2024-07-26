@@ -9,7 +9,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
   let totalItems=0;
 
   return await model.article.findAll({
-    attributes:['id','name','image','description','price'],    
+    attributes:['id','name','image','description','price','isSUW'],    
     include:[{
         model:model.lots,
         attributes:['id'],
@@ -113,7 +113,7 @@ async function AddShoppingCar(req,res){
                         await model.shoppingCar.create({itemLotId,accountId,dispatch,orderStatusId:1,audit},{transaction:t})
                         .then(async function(rsCar){                       
                             t.commit();
-                            res.status(200).json({"result":true,"message":"Ok. Reserva exitosa"}); 
+                            res.status(200).json({"result":true,"message":"Ok. Reserva exitosa, vea la sección de 'Mis pedidos' "}); 
                         }).catch(async function(error){    
                             t.rollback();                                                       
                             res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
