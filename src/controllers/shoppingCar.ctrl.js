@@ -55,6 +55,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
             ProductItems:[]
         });        
         let subT=0.0;
+        let salePrice=0.0;
         for (let Jindex = 0; Jindex <  rsCar[index]['lots'].length; Jindex++) {  // nivel lote        
             if(rsCar[index]['lots'].length>0){
                 for (let Kindex = 0; Kindex <  rsCar[index]['lots'][Jindex]['itemLots'].length; Kindex++) { // Nivel item lote
@@ -64,9 +65,9 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
                     
                     for (let Mindex = 0; Mindex <  rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'].length; Mindex++) {  // nivel shoppingCar
                         if(rsCar[index].isSUW){//Si se vende por unidad
-                            let salePrice=rsCar[index]['lots'][Jindex]['itemLots'][Kindex].weight * rsCar[index].price;
+                            salePrice=rsCar[index]['lots'][Jindex]['itemLots'][Kindex].weight * rsCar[index].price;
                         }else{
-                            let salePrice=rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch * rsCar[index].price;
+                            salePrice=rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch * rsCar[index].price;
                         }
                         subT =subT + parseFloat(salePrice);
                         ProductItems.push({ 
