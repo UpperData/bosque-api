@@ -150,7 +150,8 @@ async function AddShoppingCar(req,res){
                     t.rollback();
                     res.status(403).json({"result":false,"message":"No posee una cuenta activa para comprar"});        
                 }
-            }).catch(async function(error){                           
+            }).catch(async function(error){ 
+                console.log(error)                          
                 t.rollback();
                 res.status(403).json({"result":false,"message":"No se pudo validar su usuario, intente nuevamente"});        
             })            
