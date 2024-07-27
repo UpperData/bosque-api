@@ -101,6 +101,7 @@ async function AddShoppingCar(req,res){
     // const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', ''));         
     const t = await model.sequelize.transaction();
     let SUW=JSON.parse(isSUW);
+    
     console.log(SUW);
     let audit=[]
     const toDay=moment(); 
@@ -124,19 +125,26 @@ async function AddShoppingCar(req,res){
                         rsCondition=await model.itemLot.update({conditionId:2},{where:{id:itemLotId},transaction:t})    
                     }else{ // venta por kg
                         // calcular existencia
-                        rsExistence = await model.itemLot.findOne({attributes:['weight']},{where:{id:itemLotId},transaction:t});
-                        if(rsExistence.weight>=dispatch){
-                            diff=rsExistence.weight-dispatch
-                            if(diff>0){isActived=true;}
-                            else{
-                                isActived=false;
+                        await model.itemLot.findOne({attributes:['weight']},{where:{id:itemLotId},transaction:t})
+                        .then(async function (rsExistence){
+                            console.log("Desapcho: "+dispatch);
+                            if(rsExistence.weight>=dispatch){
+                                diff=rsExistence.weight-dispatch
+                                if(diff>0){isActived=true;}
+                                else{
+                                    isActived=false;
+                                }
+                                await model.itemLot.update({weight:diff,isActived },
+                                    {where:{id:itemLotId},transaction:t})          
+                            }else{
+                                t.rollback();                                                       
+                                res.status(403).json({"result":false,"message":"Cantidad solicitada supera lo disponible( "+rsExistence.weight+" Kg)"});                                    
                             }
-                            await model.itemLot.update({weight:diff,isActived },
-                                {where:{id:itemLotId},transaction:t})          
-                        }else{
+                        }).catch(async function(error){ 
+                            console.log(error)   
                             t.rollback();                                                       
-                            res.status(403).json({"result":false,"message":"Cantidad solicitada supera lo disponible( "+rsExistence.weight+" Kg)"});                                    
-                        }
+                            res.status(403).json({"result":false,"message":"Error validando existencia, intente nuevamente"});        
+                        })                        
                     }                    
                     await model.shoppingCar.create({itemLotId,accountId,dispatch,orderStatusId:1,audit},{transaction:t})
                     .then(async function(rsCar){                       
