@@ -100,6 +100,7 @@ async function AddShoppingCar(req,res){
     const{itemLotId,accountId,dispatch,isSUW}=req.body   // <<< Recibir isSUW
     // const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', ''));         
     const t = await model.sequelize.transaction();
+    isSUW=new Boolean(isSUW);
     let audit=[]
     const toDay=moment(); 
     audit.push({
