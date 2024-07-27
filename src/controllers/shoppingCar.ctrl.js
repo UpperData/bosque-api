@@ -67,7 +67,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
                         if(rsCar[index].isSUW){//Si se vende por unidad
                             salePrice=rsCar[index]['lots'][Jindex]['itemLots'][Kindex].weight * rsCar[index].price;
                         }else{
-                            salePrice=rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch * rsCar[index].price;
+                            salePrice=parseFloat(rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch) * rsCar[index].price;
                         }
                         subT =subT + parseFloat(salePrice);
                         ProductItems.push({ 
@@ -97,7 +97,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
 }) 
 }
 async function AddShoppingCar(req,res){      
-    const{itemLotId,accountId,dispatch}=req.body  
+    const{itemLotId,accountId,dispatch,isSUW}=req.body   // <<< Recibir isSUW
     // const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', ''));         
     const t = await model.sequelize.transaction();
     let audit=[]
@@ -116,21 +116,35 @@ async function AddShoppingCar(req,res){
             //valida cuenta activa
             await model.account.findAndCountAll({attributes:['id'],where:{id:accountId,isActived:true}})
             .then(async function(rsAccount){
+                let rsCondition;
                 if(rsAccount.count>0){ // cuenta activa
-                    await model.itemLot.update({conditionId:2},{where:{id:itemLotId},transaction:t}) // actualiza item a reservado
-                    .then(async function(rsCondition){
-                        await model.shoppingCar.create({itemLotId,accountId,dispatch,orderStatusId:1,audit},{transaction:t})
-                        .then(async function(rsCar){                       
-                            t.commit();
-                            res.status(200).json({"result":true,"message":"Ok. Reserva exitosa, vea la sección de 'Mis pedidos' "}); 
-                        }).catch(async function(error){    
+                    if(isSUW){ // venta por unidapesada
+                        rsCondition=await model.itemLot.update({conditionId:2},{where:{id:itemLotId},transaction:t})    
+                    }else{ // venta por kg
+                        // calcular existencia
+                        rsExistence = await model.itemLot.findOne({weight},{where:{id:itemLotId},transaction:t});
+                        if(rsExistence.weight>=dispatch){
+                            diff=rsExistence.weight-dispatch
+                            if(diff>0){isActived=true;}
+                            else{
+                                isActived=false;
+                            }
+                            await model.itemLot.update({weight:diff,isActived },
+                                {where:{id:itemLotId},transaction:t})          
+                        }else{
                             t.rollback();                                                       
-                            res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
-                        })
-                    }).catch(async function(error){                                  
-                        t.rollback();                        
-                        res.status(403).json({"result":false,"message":"Error reservando producto, intente nuevamente"});        
+                            res.status(403).json({"result":false,"message":"Cantidad solicitada supera lo disponible( "+rsExistence.weight+" Kg)"});                                    
+                        }
+                    }                    
+                    await model.shoppingCar.create({itemLotId,accountId,dispatch,orderStatusId:1,audit},{transaction:t})
+                    .then(async function(rsCar){                       
+                        t.commit();
+                        res.status(200).json({"result":true,"message":"Ok. Reserva exitosa, vea 'Mis pedidos' "}); 
+                    }).catch(async function(error){    
+                        t.rollback();                                                       
+                        res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
                     })
+                   
                     
                 }else{// cuenta inactiva
                     t.rollback();
