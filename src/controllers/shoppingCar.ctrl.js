@@ -100,7 +100,7 @@ async function AddShoppingCar(req,res){
     const{itemLotId,accountId,dispatch,isSUW}=req.body   // <<< Recibir isSUW
     // const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', ''));         
     const t = await model.sequelize.transaction();
-    isSUW=new Boolean(isSUW);
+    let SUW=new Boolean(isSUW);
     let audit=[]
     const toDay=moment(); 
     audit.push({
@@ -119,7 +119,7 @@ async function AddShoppingCar(req,res){
             .then(async function(rsAccount){
                 let rsCondition;
                 if(rsAccount.count>0){ // cuenta activa
-                    if(isSUW){ // venta por unidapesada
+                    if(SUW){ // venta por unidapesada
                         rsCondition=await model.itemLot.update({conditionId:2},{where:{id:itemLotId},transaction:t})    
                     }else{ // venta por kg
                         // calcular existencia
@@ -145,8 +145,6 @@ async function AddShoppingCar(req,res){
                         t.rollback();                                                       
                         res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
                     })
-                   
-                    
                 }else{// cuenta inactiva
                     t.rollback();
                     res.status(403).json({"result":false,"message":"No posee una cuenta activa para comprar"});        
