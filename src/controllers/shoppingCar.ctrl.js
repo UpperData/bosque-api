@@ -124,7 +124,7 @@ async function AddShoppingCar(req,res){
                         rsCondition=await model.itemLot.update({conditionId:2},{where:{id:itemLotId},transaction:t})    
                     }else{ // venta por kg
                         // calcular existencia
-                        rsExistence = await model.itemLot.findOne({weight},{where:{id:itemLotId},transaction:t});
+                        rsExistence = await model.itemLot.findOne({attributes:['weight']},{where:{id:itemLotId},transaction:t});
                         if(rsExistence.weight>=dispatch){
                             diff=rsExistence.weight-dispatch
                             if(diff>0){isActived=true;}
