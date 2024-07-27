@@ -128,7 +128,7 @@ async function AddShoppingCar(req,res){
                         await model.itemLot.findOne({attributes:['weight'],where:{id:itemLotId},transaction:t})
                         .then(async function (rsExistence){
                             console.log("Desapcho: "+dispatch);
-                            if(rsExistence.weight>=dispatch){
+                            if(rsExistence.weight>=parseFloat(dispatch)){
                                 diff=rsExistence.weight-dispatch
                                 if(diff>0){isActived=true;}
                                 else{
