@@ -29,12 +29,12 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
                         required:true,
                         where:{id:accountId}
                     }]
-            },{
-                model:model.condition,
+            }/* ,{
+                model:model.condition, //ca
                 attributes:['id','name'],
                 where:{id:2},
                 required:true,
-            }
+            } */
             ]
         }]
     }]
