@@ -7,7 +7,6 @@ const bcrypt=require("bcryptjs"); // encripta caracteres
 var crypto = require("crypto"); // valor aleatorio
 const { Op } = require("sequelize");
 require ('dotenv').config();
-
 async function registerAccount(req,res){
     const {email,people,memberships,photo,phone}=req.body  
     console.log("Registrando");

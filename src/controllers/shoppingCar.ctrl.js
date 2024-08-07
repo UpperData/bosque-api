@@ -2,7 +2,50 @@ const model=require('../db/models/index');
 const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 var moment=require('moment');
-const { raw } = require('express');
+
+async function editShoppincar(req,res){
+    const{itemLotId,accountId,dispatch,isSUW,id}=req.body   // <<< Recibir isSUW    
+    const t = await model.sequelize.transaction();
+    let SUW=JSON.parse(isSUW);
+    
+    let audit=[]
+    const toDay=moment(); 
+    audit.push({
+        "action":"Cliente actualizó" ,// que accion se realizó        
+        "account":accountId, //  quien la realizó (cuenta de usuario)
+        "moment": toDay, //  cuando la realizó (Fecha hora)
+        "itemLot": itemLotId
+    });
+    return await model.shoppingCar.update({dispatch,isActived},{where:{id},transaction:t})
+    .then(async function (rsUpdate){
+        await model.itemLot.findOne({attributes:['weight'],where:{id:itemLotId},transaction:t})
+        .then(async function (rsExistence){
+            console.log("Desapcho: "+dispatch);
+            if(rsExistence.weight>=parseFloat(dispatch)){
+                diff=rsExistence.weight-dispatch
+                if(diff>0){isActived=true;}
+                else{
+                    isActived=false;
+                }
+                await model.itemLot.update({weight:diff,isActived },
+                    {where:{id:itemLotId},transaction:t})          
+            }else{
+                t.rollback();                                                       
+                res.status(403).json({"result":false,"message":"Cantidad solicitada supera lo disponible( "+rsExistence.weight+" Kg)"});                                    
+            }
+        }).catch(async function(error){ 
+            console.log(error)   
+            t.rollback();                                                       
+            res.status(403).json({"result":false,"message":"Error validando existencia, intente nuevamente"});        
+        })                        
+        t.commit();
+        res.status(200).json({"result":true,"message":"Registro actualizado"});         
+    }).catch(async function(error){
+        t.rollback();
+        res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+    })
+}
+
 async function getShoppingCar(req,res){ // busca especia de un carrito
   const {accountId} = req.params;
   let totalDolar=0;
@@ -91,8 +134,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
         ProductItems=[]; 
     } 
     res.status(200).json({"result":true,"message":"Busqueda satisfactoria","data":{accountId,totalDolar,totalItems,itemOrder}}); 
-  }).catch(async function(error){    
-    console.log(error);         
+  }).catch(async function(error){       
     res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
 }) 
 }
@@ -102,7 +144,6 @@ async function AddShoppingCar(req,res){
     const t = await model.sequelize.transaction();
     let SUW=JSON.parse(isSUW);
     
-    console.log(SUW);
     let audit=[]
     const toDay=moment(); 
     audit.push({
@@ -175,4 +216,5 @@ async function AddShoppingCar(req,res){
          
 }
 
-module.exports={getShoppingCar,AddShoppingCar};
+
+module.exports={getShoppingCar,AddShoppingCar,editShoppincar};
