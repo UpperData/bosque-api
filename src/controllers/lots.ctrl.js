@@ -108,6 +108,7 @@ async function itemLotCreate(req,res){ // crea un nuevo item en un lote
                     
                 }).catch(async function(error){        
                     t.rollback();
+                    console.log(error);
                     res.status(403).json({data:{"result":false,"message":error.message}});
                 }) 
             }
@@ -119,6 +120,7 @@ async function itemLotCreate(req,res){ // crea un nuevo item en un lote
    
         }else{
             t.rollback();
+            console.log(error);
             res.status(403).json({data:{"result":false,"message":"Ingrese items en el lote"}});
         } 
     })  

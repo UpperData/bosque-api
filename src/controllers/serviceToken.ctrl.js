@@ -5,9 +5,8 @@ const model=require('../db/models/index');
 require('dotenv').config();
 
  async function newToken(account,roles,type,dateTime,people,shop){ //Genera un token con una estructura especifica -->newToken(account,roles,type,dateTime,people)
-	
 	var exp;
-	 if(type=="passwordReset"){
+	if(type=="passwordReset"){
 		exp=moment().add(2,"hours").unix();
 	}else if(type=="forgot"){
 		exp=moment().add(1,"days").unix();
@@ -26,24 +25,22 @@ require('dotenv').config();
 	}
 	 
     var payload={
-	type,
-	account:{"id":account.id,"email":account.email,"name":account.name},	
-	role:roles,	
-	people:people,
-	dateTimeLogin:dateTime,	
-	rem:"lo-veremos-cara-a-cara",
-	iat:moment().unix(),
-	exp,
-	shop:shop
-    };
-	//console.log(payload)
+		type,
+		account:{"id":account.id,"email":account.email,"name":account.name},	
+		role:roles,	
+		people:people,
+		dateTimeLogin:dateTime,	
+		rem:"lo-veremos-cara-a-cara",
+		iat:moment().unix(),
+		exp,
+		shop:shop
+    };	
     var token= await jwt.encode(payload,process.env.JWT_SECRET);     
     return token;
 }
 async function dataTokenGet(token){ // obtiene informacion del token con la estructura --> newToken(account,roles,type,dateTime,people,shop)
 	try{
-		var  payload= await jwt.decode(token,process.env.JWT_SECRET);
-		//console.log(payload);		
+		var  payload= await jwt.decode(token,process.env.JWT_SECRET);			
 		if (Date.now() >= payload.exp * 1000) {
 			return false;
 		}else{
