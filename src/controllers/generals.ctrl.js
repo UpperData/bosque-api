@@ -406,7 +406,7 @@ async function generalCurrenteChange(){
             return await model.changeType.findOne({
                 where:{id:rsChangeType.id}
             }).then(async function(rsChangeTypeCurrent){
-                return rsChangeTypeCurrent.value; 
+                return  Number(rsChangeTypeCurrent.value); 
                 if(rsChangeTypeCurrent){                    
                     return rsChangeTypeCurrent.value;                    
                 }else{
