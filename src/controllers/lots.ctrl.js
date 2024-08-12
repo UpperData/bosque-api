@@ -82,6 +82,7 @@ async function itemLotupdate(req,res){ // edita un nuevo lote de articulos
 }
 async function itemLotCreate(req,res){ // crea un nuevo item en un lote
     const{items,lotId}=req.body;
+    console.log(items); 
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     let audit=[]   
     const toDay=moment(); 
