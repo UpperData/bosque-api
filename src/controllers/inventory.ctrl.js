@@ -264,7 +264,7 @@ async function inventoryAdd(req,res){
 async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de inventario
     const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
     await model.article.findAll({
-        attributes:[['id','articleId'],'name','description','isActived','isSUW','price'],        
+        attributes:['id','name','description','isActived','isSUW','price','minStock'],        
         order:['name','isActived']
     }).then(async function(rsInventory){
         console.log(rsInventory[0])
@@ -278,7 +278,7 @@ async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de
             asignados= await model.assignment.findOne({
                 attributes:[
                     [model.sequelize.fn('sum', model.sequelize.col('quantity')), 'total_asignament']],
-                where:{articleId:rsInventory[index].dataValues.articleId,isActived:true}
+                where:{articleId:rsInventory[index].dataValues.id,isActived:true}
             }) 
             rsInventory[index].dataValues.asignados=asignados.dataValues.total_asignament   
             rsInventory[index].dataValues.almacen=rsInventory[index].existence-asignados.dataValues.total_asignament   
