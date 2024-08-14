@@ -55,6 +55,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue:true
+    },audit:{ 
+      type: DataTypes.JSONB,
+      allowNull: false
     }
   }, {
     sequelize,

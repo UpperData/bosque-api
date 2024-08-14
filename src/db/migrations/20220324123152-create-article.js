@@ -31,6 +31,10 @@ module.exports = {
       isSUW:{ // Sale by unit weight
         type: Sequelize.BOOLEAN,
         allowNull: false
+      },      
+      audit:{ 
+        type: Sequelize.JSONB,
+        allowNull: false
       },
       createdAt: {
         allowNull: false,

@@ -39,14 +39,23 @@ async function getPublishing(req,res){
 }
 async function setPublishing(req,res){
     const {articleId,isPublished}=req.body
-    const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
-    return await model.inventory.update({isPublished},{where:{articleId}})
+    const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
+    let audit=[]   
+    const toDay=moment(); 
+    audit.push({
+        "action":isPublished?"Publico":"dio de baja"+ id ,// que accion se realizó
+        "people":dataToken.people.document,// quien la realizo (Nombre)
+        "account":dataToken.account, //  quien la realizó (cuenta de usuario)
+        "moment": toDay, //  cuando la realizó (Fecha hora)
+        "values":{"status":isPublished,"article":articleId}
+    }); 
+    return await model.article.update({isActived:isPublished},{where:{id:articleId}})
     .then(async function(rsPublishing){
         if(rsPublishing){
             if(isPublished){
-                res.status(200).json({"data":{"result":true,"message":"Publicación generada de satisfatoriament","data":rsPublishing}});        
+                res.status(200).json({"data":{"result":true,"message":"Artículo publicado","data":rsPublishing}});        
             }else{
-                res.status(200).json({"data":{"result":true,"message":"Publicación ocultada satisfactoriamente","data":rsPublishing}});        
+                res.status(200).json({"data":{"result":true,"message":"Artículo de baja","data":rsPublishing}});        
             }
             
         }           
