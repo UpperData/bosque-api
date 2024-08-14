@@ -8,8 +8,7 @@ var crypto = require("crypto"); // valor aleatorio
 const { Op } = require("sequelize");
 require ('dotenv').config();
 async function registerAccount(req,res){
-    const {email,people,memberships,photo,phone}=req.body  
-    console.log("Registrando");
+    const {email,people,memberships,photo,phone}=req.body      
       //general password 8 dogotpd
     var now=new Date();                  
     //let pass= crypto.randomBytes(4).toString('hex')+now.getTime();

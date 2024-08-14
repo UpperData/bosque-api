@@ -2,8 +2,7 @@ const model=require('../db/models/index');
 const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 const generals=require('./generals.ctrl');
-const { error } = require('console');
-
+var moment=require('moment');
 async function getPublishing(req,res){    
     const {articleId}=req.params;
     //const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', ''));     
