@@ -42,7 +42,7 @@ async function setPublishing(req,res){
     let audit=[]   
     const toDay=moment(); 
     audit.push({
-        "action":isPublished?"Publico":"dio de baja"+ id ,// que accion se realizó
+        "action":isPublished?"Publico":"dio de baja"+ articleId ,// que accion se realizó
         "people":dataToken.people.document,// quien la realizo (Nombre)
         "account":dataToken.account, //  quien la realizó (cuenta de usuario)
         "moment": toDay, //  cuando la realizó (Fecha hora)
