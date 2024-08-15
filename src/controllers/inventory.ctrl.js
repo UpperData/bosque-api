@@ -21,7 +21,7 @@ async function currentArticleStock(articleId){
                 raw:true
             }
         ).then(async function(rsStock){
-            console.log(rsStock);
+            console.log("Stock "+rsStock.count);
             return rsStock.count;
         })
     }
@@ -309,7 +309,7 @@ async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de
             console.log('----------------------------');
             console.log(rsInventory[index].dataValues.id);
             
-            rsInventory[index].dataValues.almacen=currentArticleStock(rsInventory[index].dataValues.rows.id)
+            // rsInventory[index].dataValues.almacen=currentArticleStock(rsInventory[index].dataValues.id);
             rsInventory[index].dataValues.dolarValue=Number(rsInventory[index].price).toFixed(2); //agrega precio en dolares segun el valor actual
             totalPriceInventory=totalPriceInventory+( Number(rsInventory[index].price) * Number(rsInventory[index].existence));
         }    
