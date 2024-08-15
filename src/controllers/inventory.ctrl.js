@@ -21,8 +21,8 @@ async function currentArticleStock(articleId){
                 raw:true
             }
         ).then(async function(rsStock){ 
-            console.log(rsStock.count);           
-            return parseInt(rsStock.count, 10); 
+            console.log("Stock "+rsStock.count);           
+            return rsStock.count, 10; 
         })
     }
     catch(error){
