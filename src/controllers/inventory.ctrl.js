@@ -16,7 +16,7 @@ async function currentArticleStock(articleId){
                     where:{ isActived:true},                        
                     include:[{
                         model:model.itemLot,
-                        attributes:['id'],
+                        attributes:['id','weight'],
                         where:{ conditionId:1},
                         required:true
                     }]
@@ -28,7 +28,7 @@ async function currentArticleStock(articleId){
             return rsStock.count + "Unit"; 
         }else{
             //return rsStock.row[0].itemLot + "kg"; 
-            return "0 kg"; 
+            return rsStock[0].rows.weight + "0 kg"; 
         }        
         
       
@@ -314,8 +314,6 @@ async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de
             }) 
             rsInventory[index].dataValues.almacen=0; // Valor predeterminado
             rsInventory[index].dataValues.dolarValue=0;
-            console.log('----------------------------');            
-            console.log("Stock "+currentArticleStock(rsInventory[index].dataValues.id)); 
             
             rsInventory[index].dataValues.almacen= await currentArticleStock(rsInventory[index].dataValues.id);
             rsInventory[index].dataValues.dolarValue=Number(rsInventory[index].price).toFixed(2); //agrega precio en dolares segun el valor actual
