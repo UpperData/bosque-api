@@ -28,7 +28,7 @@ async function currentArticleStock(articleId){
             return rsStock.count + "Unit"; 
         }else{
             //return rsStock.row[0].itemLot + "kg"; 
-            return rsStock[0].rows.weight + "0 kg"; 
+            return rsStock.rows[0].weight + "kg"; 
         }        
         
       
