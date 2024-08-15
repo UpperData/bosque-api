@@ -22,7 +22,7 @@ async function currentArticleStock(articleId){
                     }]
             }],nest: true
         });  
-        console.log(rsStock.rows[0].lots) 
+        console.log(rsStock.rows[0].lots.itemLots) 
         if(rsStock.isSUW){
             return rsStock.count + " Unit"; 
         }else{
