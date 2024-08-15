@@ -8,19 +8,24 @@ const { raw } = require('express');
 
 async function currentArticleStock(articleId){
     try{
-        rsStock= await model.lots.findAndCountAll(
-            {
-                attributes:['id'] ,                   
-                where:{ isActived:true,articleId},                        
-                include:[{
-                    model:model.itemLot,
-                    attributes:['id'],
-                    where:{ conditionId:1},
-                    required:true
-                }],
-                raw:true
-            }
-        );           
+        rsStock= await model.article.findOne({
+            where:{id:articleId},
+            include:[{
+                model:model.lots.findAndCountAll(
+                    {
+                        attributes:['id'] ,                   
+                        where:{ isActived:true},                        
+                        include:[{
+                            model:model.itemLot,
+                            attributes:['id'],
+                            where:{ conditionId:1},
+                            required:true
+                        }]
+                    }
+                )
+            }],
+            raw:true
+        });           
         return rsStock.count; 
       
     }
