@@ -22,8 +22,15 @@ async function currentArticleStock(articleId){
                     }]
             }],
             raw:true
-        });           
-        return rsStock.count; 
+        });  
+        console.log(rsStock.rows) 
+        if(rsStock.isSUW){
+            return rsStock.count + "Unit"; 
+        }else{
+            //return rsStock.row[0].itemLot + "kg"; 
+            return "0 kg"; 
+        }        
+        
       
     }
     catch(error){
