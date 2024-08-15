@@ -8,7 +8,7 @@ const { raw } = require('express');
 
 async function currentArticleStock(articleId){
     try{
-        await model.lots.findAndCountAll(
+        rsStock= await model.lots.findAndCountAll(
             {
                 attributes:['id'] ,                   
                 where:{ isActived:true,articleId},                        
@@ -20,10 +20,9 @@ async function currentArticleStock(articleId){
                 }],
                 raw:true
             }
-        ).then(async function(rsStock){ 
-                      
-            return rsStock.count; 
-        })
+        );           
+        return rsStock.count; 
+      
     }
     catch(error){
         console.log(error);        
