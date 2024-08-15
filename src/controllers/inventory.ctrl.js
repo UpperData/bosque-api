@@ -22,12 +22,12 @@ async function currentArticleStock(articleId){
                     }]
             }],nest: true
         });  
-        console.log(rsStock.rows[0]) 
+        console.log(rsStock.rows[0].lots) 
         if(rsStock.isSUW){
             return rsStock.count + " Unit"; 
         }else{
             //return rsStock.row[0].itemLot + "kg"; 
-            return rsStock.rows[0].dataValues.lots.itemLots.weight + "kg"; 
+            return rsStock.rows[0].lots.itemLots.weight + "kg"; 
         }        
         
       
