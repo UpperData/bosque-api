@@ -6,7 +6,31 @@ const { compareSync } = require('bcryptjs');
 const { where } = require('sequelize/lib/sequelize');
 const { raw } = require('express');
 
-
+async function currentArticleStock(articleId){
+    try{
+        await model.lots.findAndCountAll(
+            {
+                attributes:['id'] ,                   
+                where:{ isActived:true,articleId},                        
+                include:[{
+                    model:model.itemLot,
+                    attributes:['id'],
+                    where:{ conditionId:1},
+                    required:true
+                }],
+                raw:true
+            }
+        ).then(async function(rsStock){
+            console.log(rsStock);
+            return rsStock.count;
+        })
+    }
+    catch(error){
+        console.log(error);        
+        return (-1)
+    }
+  
+}
 async function assignmentNew(req,res){
     const{accountId,articleId,quantity}=req.body;
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', ''));     
@@ -267,8 +291,8 @@ async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de
         attributes:['id','name','description','isActived','isSUW','price','minStock'],        
         order:['name','isActived']
     }).then(async function(rsInventory){
-        console.log(rsInventory[0])
-        //optiene precio del dolar
+        
+        // obtener item disponibles para el artocilo
         // const dolar= await generals.generalCurrenteChange();
         // variable precio total
         let totalPriceInventory=0;
@@ -282,7 +306,10 @@ async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de
             }) 
             rsInventory[index].dataValues.almacen=0; // Valor predeterminado
             rsInventory[index].dataValues.dolarValue=0;
-            // rsInventory[index].dataValues.almacen=Number(rsInventory[index].existence) - Number(asignados.dataValues.total_asignament   )
+            console.log('----------------------------');
+            console.log(rsInventory[index].dataValues.id);
+            
+            rsInventory[index].dataValues.almacen=currentArticleStock(rsInventory[index].dataValues.id)
             rsInventory[index].dataValues.dolarValue=Number(rsInventory[index].price).toFixed(2); //agrega precio en dolares segun el valor actual
             totalPriceInventory=totalPriceInventory+( Number(rsInventory[index].price) * Number(rsInventory[index].existence));
         }    
@@ -364,4 +391,5 @@ module.exports={assignmentNew
     ,assignmentRevoke
     ,returnArticleArray
     ,inventoryGet
+    ,currentArticleStock
 };

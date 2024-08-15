@@ -3,6 +3,7 @@ const { Op } = require("sequelize");
 require ('dotenv').config();
 var jwt=require('jwt-simple');
 const request = require("request");
+
 async function currentAccount(token){
 	try{
         //console.log(token);
@@ -438,14 +439,7 @@ async function getCarMakes(req,res){
         }
     })
 }
-/*async function getCarModels(req,res){
-    request("https://carapi.app/api/models",(err,response,body)=>{
-        if (!err){
-            const models = JSON.parse(body);
-            res.status(200).json({"data":{"result":true,"message":"Busqueda satisfatoria","data":models.data}});
-        }
-    })
-}*/
+
 async function getCarModels(req,res){
     const {make} =req.params    
     if(make== '*' ){
