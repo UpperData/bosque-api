@@ -20,8 +20,7 @@ async function currentArticleStock(articleId){
                         where:{ conditionId:1},
                         required:true
                     }]
-            }],
-            raw:true
+            }],nest: true
         });  
         console.log(rsStock.rows) 
         if(rsStock.isSUW){
