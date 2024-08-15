@@ -20,7 +20,8 @@ async function currentArticleStock(articleId){
                 }],
                 raw:true
             }
-        ).then(async function(rsStock){           
+        ).then(async function(rsStock){ 
+            console.log(rsStock.count);           
             return rsStock.count;
         })
     }
