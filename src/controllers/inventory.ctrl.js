@@ -25,10 +25,10 @@ async function currentArticleStock(articleId){
         });  
         console.log(rsStock.rows) 
         if(rsStock.isSUW){
-            return rsStock.count + "Unit"; 
+            return rsStock.count + " Unit"; 
         }else{
             //return rsStock.row[0].itemLot + "kg"; 
-            return rsStock.rows[0].weight + "kg"; 
+            return rsStock.rows[0].lots.itemLots.weight + "kg"; 
         }        
         
       
