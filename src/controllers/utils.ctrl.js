@@ -11,8 +11,6 @@ async function isInternetConnect(){
         return false
     });    
 }
-
-
 async function sendMail(data){ //Envia Correo electronico
    
     if(validMail){

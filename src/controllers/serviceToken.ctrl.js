@@ -13,7 +13,7 @@ require('dotenv').config();
 	}else if(type=="newAccount"){
 		exp=moment().add(3,"days").unix();
 	}else if(type=="login"){
-		exp=moment().add(6,"hours").unix();
+		exp=moment().add(12,"hours").unix();
 	}else if(type=="updateEmail"){
 		exp=moment().add(1,"days").unix();
 	}else if(type=="test"){

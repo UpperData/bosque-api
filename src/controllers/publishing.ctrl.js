@@ -38,6 +38,7 @@ async function getPublishing(req,res){
 }
 async function setPublishing(req,res){
     const {articleId,isPublished}=req.body
+    const t= await model.sequelize.transaction();
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     let audit=[]   
     const toDay=moment(); 
@@ -48,18 +49,39 @@ async function setPublishing(req,res){
         "moment": toDay, //  cuando la realizó (Fecha hora)
         "values":{"status":isPublished,"article":articleId}
     }); 
-    return await model.article.update({isActived:isPublished},{where:{id:articleId}})
+    return await model.article.update({isPublished},{where:{id:articleId}},{transaction:t})
     .then(async function(rsPublishing){
-        if(rsPublishing){
-            if(isPublished){
+        await t.commit();                     
+        if(isPublished){ // notifica nuevos productos disponible
+            await model.accountRole.findAll({where:{roleId:5}}) // roles de clientes
+            .then(async function(rsRole){                    
+                for (let index = 0; index < rsRole.length; index++) {
+                    const l= await model.sequelize.transaction();
+                    console.log(rsRole[index].accountId)
+                    try{
+                        await model.notification.create({
+                            accountId: rsRole[index].accountId,
+                            from: "Bosque Marino",
+                            read: false,
+                            body: {"message":"Nuevos productos disponibles", "link":"#","img":""}
+                        },{transaction:l})
+                        l.commit();
+                    }catch(error){
+                        console.log(error);
+                        l.rollback();
+                    }                        
+                }
                 res.status(200).json({"data":{"result":true,"message":"Artículo publicado","data":rsPublishing}});        
-            }else{
-                res.status(200).json({"data":{"result":true,"message":"Artículo de baja","data":rsPublishing}});        
-            }
+            })
+        }else{
+                
+            res.status(200).json({"data":{"result":true,"message":"Artículo de baja","data":rsPublishing}});        
+        }
             
-        }           
+                 
     }).catch(async function(error){            
         console.log(error)
+        await t.rollback();  
         res.status(403).json({"data":{"result":false,"message":"Algo salió mal, intente nuevamente"}});        
     })
    

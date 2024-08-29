@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   notification.init({
-    accountRolesId: DataTypes.INTEGER,
+    accountId: DataTypes.INTEGER,
     from: DataTypes.STRING,
     read: DataTypes.BOOLEAN,
     body: DataTypes.JSONB

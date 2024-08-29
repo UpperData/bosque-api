@@ -2,11 +2,123 @@ const model=require('../db/models/index');
 const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 const generals=require('./generals.ctrl');
-const { compareSync } = require('bcryptjs');
-const { where } = require('sequelize/lib/sequelize');
-const { raw } = require('express');
+var moment=require('moment');
+var fs = require("fs");
+const Excel = require("exceljs");
+var path = require("path");
 
-async function currentArticleStock(articleId){
+async function downloadInventorySheet(req, res) {
+    
+    try {
+      var workbook = new Excel.Workbook();
+      var worksheet = workbook.addWorksheet();
+  
+      worksheet.columns = [
+        { header: "Id", key: "id", width: 10 },
+        { header: "Name", key: "name", width: 32 },
+        { header: "D.O.B.", key: "DOB", width: 10 }
+      ];
+      worksheet.addRow({ id: 1, name: "John Doe", DOB: new Date(1970, 1, 1) });
+      worksheet.addRow({ id: 2, name: "Jane Doe", DOB: new Date(1965, 1, 7) });
+  
+      workbook.xlsx
+        .writeFile("newSaveeee.xlsx")
+        .then(response => {
+          console.log("file is written");
+          console.log(path.join(__dirname, "../newSaveeee.xlsx"));
+          console.log(path.join(__dirname, "../newSaveeee.xlsx"));
+          res.sendFile(path.join(__dirname, "..\newSaveeee.xlsx"));
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    } catch (err) {
+      console.log("OOOOOOO this is the error: " + err);
+    }
+};
+
+
+async function inventoryArticle(req,res){ // optiene el inventario actual, hoja de inventario
+    const {articleId} =req.params;   
+    console.log(req.params) ;
+    await model.article.findAll({
+        attributes:['id','name','description','isActived','price','minStock','isPublished'],        
+        where:{id:articleId},
+        include:[{            
+            model:model.lots,
+                attributes:{exclude:['audit','createdAt','updatedAt']},
+                where:{isActived:true},
+                required:true,
+                include:[{    
+                    model:model.itemLot,
+                        attributes:{exclude:['audit','createdAt','updatedAt']},
+                        where:{conditionId:1},
+                    required:true
+
+                }]
+        }],
+        order:['name','isActived'],
+        raw:true
+    }).then(async function(rsInventory){
+        for (let index = 0; index < rsInventory.length; index++) {
+            rsInventory[index].numOrder=index+1;
+            rsInventory[index].weightPrice=parseFloat( rsInventory[index].price)* parseFloat(rsInventory[index]['lots.itemLots.weight']);            
+        }        
+        res.status(200).json({"result":true,"data":rsInventory});          
+    }).catch(async function(error){
+        console.log(error);
+        res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando inventario"}});  
+    })
+}
+
+
+async function assignmentArticle(articleId,conditionId){  
+    try{
+        rsAssignmet= await model.shoppingCar.findAndCountAll({            
+            include:[{
+                model:model.itemLot,
+                attributes:['id','weight'],
+                where:{ conditionId},
+                required:true,                    
+                include:[{
+                    model:model.lots,                    
+                        attributes:['id'] ,                   
+                        where:{isActived:true}, 
+                        required:true,                       
+                        include:[{
+                            model:model.article,
+                            where:{id:articleId,isActived:true},
+                            attributes:['id','name','description','isSUW'],
+                            required:true
+                        }]
+                }]
+            }],nest: true
+        }); 
+        
+        if(rsAssignmet.count>0){
+            
+            if(rsAssignmet.rows[0].itemLot.lot.article.isSUW){            
+                return rsAssignmet.count + " uds."; 
+            }else{              
+                // sumar los pesos
+                rsTotalWeight=0;
+                for (let index = 0; index < rsAssignmet.count; index++) {
+                    rsTotalWeight += parseFloat(rsAssignmet.rows[index].dispatch)                   
+                }
+                return rsTotalWeight + ' kg';
+       }
+       }else{
+        return ('-');
+       }
+    }catch(error){
+        console.log(error);
+        return ('-');
+    }   
+      
+    
+}
+
+async function currentArticleStock(articleId,conditionId){
     try{
         rsStock= await model.article.findAndCountAll({
             where:{id:articleId},
@@ -17,24 +129,25 @@ async function currentArticleStock(articleId){
                     include:[{
                         model:model.itemLot,
                         attributes:['id','weight'],
-                        where:{ conditionId:1},
+                        where:{ conditionId},
                         required:true
                     }]
             }],nest: true
-        });  
-        console.log(rsStock.rows[0].lots.itemLots) 
-        if(rsStock.isSUW){
-            return rsStock.count + " Unit"; 
-        }else{
-            //return rsStock.row[0].itemLot + "kg"; 
-            return rsStock.rows[0].lots.itemLots.weight + "kg"; 
-        }        
+        });         
+       if(rsStock.count>0){
+            if(rsStock.rows[0].isSUW){            
+                return rsStock.count + " uds."; 
+            }else{              
+                return rsStock.rows[0].lots[0].itemLots[0].weight+ " kg"; 
+            }
+       }else{
+        return ('-');
+       }
         
-      
     }
     catch(error){
         console.log(error);        
-        return (-1)
+        return ('-')
     }
   
 }
@@ -162,9 +275,20 @@ async function assignmentUpdate(req,res){
 
 async function articleNew(req,res){
     const{name,description,minStock,image,price,isSUW}=req.body;
-    const t=await model.sequelize.transaction();
+    const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
+    const t = await model.sequelize.transaction();  
+    let audit=[]   
+    const toDay=moment(); 
+    audit.push({
+        "action":"Creo nuevo articulo -> "+name ,// que accion se realizó
+        "people":dataToken.people.document,// quien la realizo (Nombre)
+        "account":dataToken.account, //  quien la realizó (cuenta de usuario)
+        "moment": toDay, //  cuando la realizó (Fecha hora)
+        "values":req.body
+    }); 
+    
     var maxArticle=await model.sequelize.query("SELECT max(id) + 1 as proximo from articles");    
-    await model.article.create({id:maxArticle[0][0].proximo,name,description,minStock,image,price,isSUW},{transaction:t},{returning: true}).
+    await model.article.create({id:maxArticle[0][0].proximo,name,description,minStock,image,price,isSUW,audit},{transaction:t},{returning: true}).
         then(async function(rsArticle){
             t.commit();
             res.status(200).json({data:{"result":true,"message":"Artículo agregado"}});
@@ -175,9 +299,9 @@ async function articleNew(req,res){
 }
 async function articleUpdate(req,res){
     const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
-    const{id,name,description,isActived,price,minStock,image,isSUW}=req.body;
+    const{id,name,description,isActived,price,minStock,image,isSUW,isPublished}=req.body;
     const t=await model.sequelize.transaction();
-    await model.article.update({name,description,isActived,price,minStock,image,isSUW},{where:{id}},{transaction:t}).then(async function(rsArticle){
+    await model.article.update({name,description,isActived,price,minStock,image,isSUW,isPublished},{where:{id}},{transaction:t}).then(async function(rsArticle){
         t.commit();
         res.status(200).json({data:{"result":true,"message":"Artículo actualizado"}});
     }).catch(async function(error){
@@ -189,7 +313,7 @@ async function inventoryGet(req,res){
     const {articelId,isArtActived,isLotActived,conditionId}=req.params;
     if(articelId!='*'){        
         return await model.article.findOne({
-            attributes:['id','name','description','price','image','minStock','isSUW','isActived'],
+            attributes:['id','name','description','price','image','minStock','isSUW','isActived','isPublished'],
             where:{
                 id:articelId,
                 isActived:isArtActived 
@@ -219,7 +343,7 @@ async function inventoryGet(req,res){
         })
     }else{        
         return await model.article.findAll({
-            attributes:['id','name','description','price','image','minStock','isSUW','isActived'],
+            attributes:['id','name','description','price','image','minStock','isSUW','isActived','isPublished'],
             where:{
                 isActived:isArtActived 
             },
@@ -250,7 +374,7 @@ async function articlelist(req,res){
     const {id}=req.params;
     if(id!='*'){        
         return await model.article.findOne({
-            attributes:['id','name','description','minStock','price','image','isSUW'],
+            attributes:['id','name','description','minStock','price','image','isSUW','isPublished'],
             where:{id,isActived:true}
         }).then(async function(rsArticle){
             if(rsArticle){
@@ -263,7 +387,7 @@ async function articlelist(req,res){
         })
     }else{        
         return await model.article.findAll({
-            attributes:['id','name','description','minStock','price','image','isSUW'],
+            attributes:['id','name','description','minStock','price','image','isSUW','isPublished'],
             where:{isActived:true}
         }).then(async function(rsArticle){
             if(rsArticle){
@@ -295,7 +419,7 @@ async function inventoryAdd(req,res){
 async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de inventario
     const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
     await model.article.findAll({
-        attributes:['id','name','description','isActived','isSUW','price','minStock'],        
+        attributes:['id','name','description','isActived','isSUW','price','minStock','isPublished'],        
         order:['name','isActived']
     }).then(async function(rsInventory){
         
@@ -313,10 +437,12 @@ async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de
             }) 
             rsInventory[index].dataValues.almacen=0; // Valor predeterminado
             rsInventory[index].dataValues.dolarValue=0;
+            rsInventory[index].dataValues.asignados=0;
             
-            rsInventory[index].dataValues.almacen= await currentArticleStock(rsInventory[index].dataValues.id);
+            rsInventory[index].dataValues.almacen= await currentArticleStock(rsInventory[index].dataValues.id,1);
+            rsInventory[index].dataValues.asignados=await assignmentArticle(rsInventory[index].dataValues.id,2);;
             rsInventory[index].dataValues.dolarValue=Number(rsInventory[index].price).toFixed(2); //agrega precio en dolares segun el valor actual
-            totalPriceInventory=totalPriceInventory+( Number(rsInventory[index].price) * Number(rsInventory[index].existence));
+            totalPriceInventory=totalPriceInventory+( Number(rsInventory[index].price) * Number(rsInventory[index].dataValues.almacen));
         }    
         //rsInventory.push({bolivaresTotalInventory:totalPriceInventory.toFixed(2)});
         //rsInventory.push({dolarTotalInventory:Number(totalPriceInventory/dolar).toFixed(2)});     
@@ -397,4 +523,7 @@ module.exports={assignmentNew
     ,returnArticleArray
     ,inventoryGet
     ,currentArticleStock
+    ,inventoryArticle
+    ,downloadInventorySheet
+
 };

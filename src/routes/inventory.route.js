@@ -20,6 +20,7 @@ router.get('/InveTorY/get/ALL',forceBrute.notBruteSecure,auth.autorizedRole(['*'
 router.put('/InvEToRY/UpdaTE/ARTICLE',forceBrute.notBruteSecure,auth.autorizedRole([5]),inventory.inventoryUpdate);//actualiza inventario 
 router.get('/InvEToRY/revoke/assignament/:id',forceBrute.notBruteSecure,auth.autorizedRole([5]),inventory.assignmentRevoke);//revocar asignación
 router.get('/INVETORY/articles/*',forceBrute.notBruteSecure,inventory.returnArticleArray); // Retorna arreglo de articulos del carriro)
+router.get('/INVETORY/get/Article/:articleId',forceBrute.notBruteSecure,inventory.inventoryArticle); // Retorna inventario por articulo
 // Lotes
 router.post('/inVenTory/LOTS',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.lotCreate);
 router.get('/inVenTory/LotS/:articleId/:isActived',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.lotArticle);
@@ -29,7 +30,9 @@ router.post('/inVenTory/LotS/ITEMS',forceBrute.notBruteSecure,auth.autorizedRole
 router.put('/inVenTory/LotS/ITEMS',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.itemLotupdate);
 router.get('/inVenTory/LotS/ITEMS/fInd/:id',forceBrute.notBruteSecure,auth.autorizedRole(['*']),lots.itemLotFind);
 router.get('/Inventory/Itemlot/true/:articleId',forceBrute.notBruteSecure,lots.itemLotByArticle);
+router.get('/Inventory/Itemlot/:lotId',forceBrute.notBruteSecure,lots.itemByLot); //
 
 // Stock
 router.get('/Inventory/stock/art/:articleId',forceBrute.notBruteSecure,inventory.currentArticleStock);
+router.get('/Inventory/stock/download/:articleId',forceBrute.notBruteSecure,inventory.downloadInventorySheet);
 module.exports=router;
