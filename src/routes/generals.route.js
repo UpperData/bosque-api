@@ -5,6 +5,7 @@ const whatsapp=require('../controllers/messageHelper');
 const auth=require('../controllers/middleware/auth.ctrl');
 const forceBrute=require('../controllers/middleware/noBrute.ctrl');
 const { whatsappSend } = require('../controllers/messageHelper');
+const notificationPush =require('../controllers/oneSignalSend.ctrl')
 
 router.get('/CarS/YEARS',forceBrute.notBruteSecure, general.getCarYear) // Retorna años
 router.get('/CaRS/MAkeS',forceBrute.notBruteSecure, general.getCarMakes) // Retorna marcas
@@ -24,4 +25,5 @@ router.get('/pARRoQuiaS/vzlA/PROVINCes/:provinceId',forceBrute.notBruteSecure, g
 router.get('/APpOINtMENt/typE/:id',forceBrute.notBruteSecure,auth.autorizedRole(['*']), general.getAppointmentTpye); // Tipos de citas
 router.get('/exaMs/geT/:id',forceBrute.notBruteSecure,auth.autorizedRole(['*']), general.getExams); // Examenes medicos
 router.post('/whatsapp/SEND',auth.autorizedRole(['*']), whatsapp.whatsappSend);
+router.post('/Notifications/SEND/push',auth.autorizedRole(['*']), notificationPush.oneSignalSend);
 module.exports=router;
