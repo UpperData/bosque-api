@@ -51,6 +51,10 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.STRING,
       defaultValue:"http://147.135.93.82/BM/genericImage.png"
     },
+    smallImage: {
+      type:DataTypes.STRING,
+      defaultValue:"http://147.135.93.82/BM/genericImage.png"
+    },
     isSUW:{ // Sale by Unit Weight
       type: DataTypes.BOOLEAN,
       allowNull: false,

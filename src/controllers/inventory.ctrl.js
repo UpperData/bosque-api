@@ -419,7 +419,7 @@ async function inventoryAdd(req,res){
 async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de inventario
     const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
     await model.article.findAll({
-        attributes:['id','name','description','isActived','isSUW','price','minStock','isPublished'],        
+        attributes:['id','name','description','isActived','isSUW','price','minStock','isPublished','image','smallImage'],        
         order:['name','isActived']
     }).then(async function(rsInventory){
         
