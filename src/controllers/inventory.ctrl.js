@@ -441,12 +441,15 @@ async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de
             
             rsInventory[index].dataValues.almacen= await currentArticleStock(rsInventory[index].dataValues.id,1);
             rsInventory[index].dataValues.asignados=await assignmentArticle(rsInventory[index].dataValues.id,2);;
-            rsInventory[index].dataValues.dolarValue=Number(rsInventory[index].price).toFixed(2); //agrega precio en dolares segun el valor actual
-            totalPriceInventory=totalPriceInventory+( Number(rsInventory[index].price) * Number(rsInventory[index].dataValues.almacen));
+            rsInventory[index].dataValues.dolarValue=parseFloat(rsInventory[index].price).toFixed(2); //agrega precio en dolares segun el valor actual
+            totalPriceInventory=totalPriceInventory+( parseFloat(rsInventory[index].price).toFixed(2) * 
+                            parseFloat(rsInventory[index].dataValues.almacen=='-'?0:rsInventory[index].dataValues.almacen).toFixed(2));
+            console.log("Precio:"+ parseFloat(rsInventory[index].price).toFixed(2));
+            console.log("Cantidad:"+ parseFloat(rsInventory[index].dataValues.almacen).toFixed(2));
         }    
         //rsInventory.push({bolivaresTotalInventory:totalPriceInventory.toFixed(2)});
         //rsInventory.push({dolarTotalInventory:Number(totalPriceInventory/dolar).toFixed(2)});     
-        res.status(200).json({"items":rsInventory,bolivaresTotalInventory:totalPriceInventory.toFixed(2),dolarTotalInventory:Number(totalPriceInventory).toFixed(2)});          
+        res.status(200).json({"items":rsInventory,dolarTotalInventory:Number(totalPriceInventory).toFixed(2)});          
     }).catch(async function(error){
         console.log(error);
         res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando inventario"}});  
