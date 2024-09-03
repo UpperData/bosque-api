@@ -48,7 +48,7 @@ async function editShoppincar(req,res){
 
 async function getShoppingCar(req,res){ // busca especia de un carrito
   const {accountId} = req.params;
-  let totalDolar=0;
+  let totalDolar=0.0;
   let totalItems=0;
 
   return await model.article.findAll({
@@ -110,9 +110,9 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
                         if(rsCar[index].isSUW){//Si se vende por unidad
                             salePrice=rsCar[index]['lots'][Jindex]['itemLots'][Kindex].weight * rsCar[index].price;
                         }else{
-                            salePrice=parseFloat(rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch) * rsCar[index].price;
+                            salePrice=parseFloat(rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].qty) * rsCar[index].price;
                         }
-                        subT =subT + parseFloat(salePrice);
+                        if (salePrice != null) subT += parseFloat(salePrice);                        
                         ProductItems.push({ 
                             id:rsCar[index]['lots'][Jindex]['itemLots'][Kindex].id,
                             weight:parseFloat(weight).toFixed(2),                            

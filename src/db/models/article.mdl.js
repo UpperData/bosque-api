@@ -22,10 +22,10 @@ module.exports = (sequelize, DataTypes) => {
       validate:{
         notNull: {
           args: [true],
-          msg: 'Por favor ingrese nombre del articulo'
+          msg: 'Por favor ingrese nombre del artículo'
         },notEmpty: {
           args: [true],
-          msg: "Nombre del articulo es requerio",
+          msg: "Nombre del artículo es requerio",
         }
          
       }
@@ -33,7 +33,8 @@ module.exports = (sequelize, DataTypes) => {
     isActived:{
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue:true
+      defaultValue:true,
+      
     },
     description: {
       type:DataTypes.STRING,
@@ -49,7 +50,19 @@ module.exports = (sequelize, DataTypes) => {
     },
     image: {
       type:DataTypes.STRING,
-      defaultValue:"http://147.135.93.82/BM/genericImage.png"
+      defaultValue:"http://147.135.93.82/BM/genericImage.png",
+      allowNull:false,
+      validate:{
+        notNull: {
+          args: [true],
+          msg: 'Por favor ingrese URL de imagen'
+        },notEmpty: {
+          args: [true],
+          msg: "URL imagen es requerida",
+        }
+         
+      }
+
     },
     smallImage: {
       type:DataTypes.STRING,

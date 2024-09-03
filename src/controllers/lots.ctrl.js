@@ -260,7 +260,7 @@ async function lotArticle(req,res){
         ...(isActived == "true" ||  isActived == "false" &&{
             isActived
         })},
-        order:[['receivedDate','DESC'],['isActived','DESC']],
+        order:[['isActived','DESC'],['receivedDate','DESC']],
         include:[{            
             model:model.itemLot,
             attributes: {exclude: ['audit','createdAt','updatedAt']}
