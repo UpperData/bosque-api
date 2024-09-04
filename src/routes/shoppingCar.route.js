@@ -7,5 +7,6 @@ const forceBrute=require('../controllers/middleware/noBrute.ctrl');
 
 router.post('/CAR/AdD',forceBrute.notBruteSecure,car.AddShoppingCar) // registra car
 router.get('/CAR/GET/:accountId',forceBrute.notBruteSecure,car.getShoppingCar) // Retorna car
+router.put('/CAR/Cancel',forceBrute.notBruteSecure,car.cancelShoppincar) // cancela item del carrito
 
 module.exports=router;

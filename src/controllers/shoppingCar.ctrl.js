@@ -3,6 +3,33 @@ const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 var moment=require('moment');
 
+async function cancelShoppincar(req,res){
+    const{itemLotArray,accountId,shoppicarId}=req.body  
+    const t = await model.sequelize.transaction();
+    let audit=[]
+    const toDay=moment(); 
+    audit.push({
+        "action":"Cliente actualizó" ,// que accion se realizó        
+        "account":accountId, //  quien la realizó (cuenta de usuario)
+        "moment": toDay, //  cuando la realizó (Fecha hora)
+        "itemLot": itemLotArray
+    });
+    return await model.shoppingCar.update({orderStatusId:6},{where:{id:shoppicarId},transaction:t})
+    .then(async function (rsUpdate){
+
+        for (let index = 0; index < itemLotArray.length; index++) {
+            await model.itemLot.update({conditionId:1 },{where:{id:itemLotArray.id},transaction:t});                 
+        }
+        t.commit();
+        res.status(200).json({"result":true,"message":"Eliminado"});         
+    }).catch(async function(error){
+        console.log(error)
+        t.rollback();
+        res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+    })
+}
+
+
 async function editShoppincar(req,res){
     const{itemLotId,accountId,dispatch,isSUW,id}=req.body   // <<< Recibir isSUW    
     const t = await model.sequelize.transaction();
@@ -48,7 +75,7 @@ async function editShoppincar(req,res){
 
 async function getShoppingCar(req,res){ // busca especia de un carrito
   const {accountId} = req.params;
-  let totalDolar=0.0;
+  let totalDolar=0;
   let totalItems=0;
 
   return await model.article.findAll({
@@ -86,7 +113,9 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
     let itemOrder=[];
     let ProductItems=[];
     for (let index = 0; index <  rsCar.length; index++) { //nivel artículo
-        itemOrder.push({
+        
+        itemOrder.push({    
+            account:null,                        
             productId:rsCar[index].id,
             productName:rsCar[index].name,
             productDescription:rsCar[index].description,
@@ -99,6 +128,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
         });        
         let subT=0.0;
         let salePrice=0.0;
+        let accountS=0;
         for (let Jindex = 0; Jindex <  rsCar[index]['lots'].length; Jindex++) {  // nivel lote        
             if(rsCar[index]['lots'].length>0){
                 for (let Kindex = 0; Kindex <  rsCar[index]['lots'][Jindex]['itemLots'].length; Kindex++) { // Nivel item lote
@@ -112,29 +142,34 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
                         }else{
                             salePrice=parseFloat(rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].qty) * rsCar[index].price;
                         }
-                        if (salePrice != null) subT += parseFloat(salePrice);                        
+                        subT =subT + parseFloat(salePrice);
                         ProductItems.push({ 
                             id:rsCar[index]['lots'][Jindex]['itemLots'][Kindex].id,
                             weight:parseFloat(weight).toFixed(2),                            
                             dispatch:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch,
-                            price:salePrice.toFixed(2)
+                            quantity:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].qty || 0.0,
+                            price:salePrice.toFixed(2),
+                            shoppingCarId:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].id
                         });
 
                     }
                     
+                    
                 }         
             }
         }
+        
         itemOrder[index].productNumItem=ProductItems.length; // numero te productos de un mismo tipo
-        itemOrder[index].productSubTotal=subT//sub total
-        itemOrder[index].ProductItems=ProductItems;
-        totalDolar += subT;
+        itemOrder[index].productSubTotal=subT || 0//sub total
+        itemOrder[index].ProductItems=ProductItems || 0;
+        totalDolar += subT || 0;
         totalItems += ProductItems.length;
         subT =0;
         ProductItems=[]; 
     } 
     res.status(200).json({"result":true,"message":"Busqueda satisfactoria","data":{accountId,totalDolar,totalItems,itemOrder}}); 
-  }).catch(async function(error){       
+  }).catch(async function(error){  
+    console.log(error);     
     res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
 }) 
 }
@@ -217,4 +252,4 @@ async function AddShoppingCar(req,res){
 }
 
 
-module.exports={getShoppingCar,AddShoppingCar,editShoppincar};
+module.exports={getShoppingCar,AddShoppingCar,editShoppincar,cancelShoppincar};
