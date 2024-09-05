@@ -4,9 +4,8 @@ const serviceToken=require('./serviceToken.ctrl');
 var moment=require('moment');
 
 async function cancelShoppincar(req,res){
-    const{itemLotArray,accountId,shoppicarId}=req.body  
-    console.log(req.body)
-    console.log("itemLotArray->"+ itemLotArray.length)
+    const{itemLot,accountId}=req.body  
+    console.log(req.body)    
     const t = await model.sequelize.transaction();
     let audit=[]
     const toDay=moment(); 
@@ -14,15 +13,19 @@ async function cancelShoppincar(req,res){
         "action":"Cliente actualizó" ,// que accion se realizó        
         "account":accountId, //  quien la realizó (cuenta de usuario)
         "moment": toDay, //  cuando la realizó (Fecha hora)
-        "itemLot": itemLotArray
+        "itemLot": itemLot
     });
-    return await model.shoppingCar.update({orderStatusId:6},{where:{id:shoppicarId},transaction:t})
-    .then(async function (rsUpdate){
-        for (let index = 0; index < itemLotArray.length; index++) {
-            await model.itemLot.update({conditionId:1 },{where:{id:itemLotArray.id},transaction:t});                 
-        }
-        t.commit();
-        res.status(200).json({"result":true,"message":"Eliminado"});         
+    return await model.shoppingCar.update({orderStatusId:6},{where:{id:itemLot.shoppingCarId},transaction:t})
+    .then(async function (rsUpdateShpp){        
+        await model.itemLot.update({conditionId:1 },{where:{id:itemLot.id},transaction:t})
+        .then(async function (rsUpdateItem){
+            t.commit();
+            res.status(200).json({"result":true,"message":"Eliminado"});         
+        }).catch(async function(error){
+            console.log(error)
+            t.rollback();
+            res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+        })  
     }).catch(async function(error){
         console.log(error)
         t.rollback();
