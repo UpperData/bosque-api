@@ -147,8 +147,8 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
                             id:rsCar[index]['lots'][Jindex]['itemLots'][Kindex].id,
                             weight:parseFloat(weight).toFixed(2),                            
                             dispatch:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch,
-                            quantity:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].qty || 0.0,
-                            price:salePrice.toFixed(2),
+                            quantity:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].qty || "0.0",
+                            price:salePrice.toFixed(2)|| "0.0",
                             shoppingCarId:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].id
                         });
 
