@@ -6,6 +6,7 @@ var moment=require('moment');
 async function cancelShoppincar(req,res){
     const{itemLotArray,accountId,shoppicarId}=req.body  
     console.log(req.body)
+    console.log("itemLotArray->"+ itemLotArray.length)
     const t = await model.sequelize.transaction();
     let audit=[]
     const toDay=moment(); 
@@ -17,7 +18,6 @@ async function cancelShoppincar(req,res){
     });
     return await model.shoppingCar.update({orderStatusId:6},{where:{id:shoppicarId},transaction:t})
     .then(async function (rsUpdate){
-
         for (let index = 0; index < itemLotArray.length; index++) {
             await model.itemLot.update({conditionId:1 },{where:{id:itemLotArray.id},transaction:t});                 
         }
