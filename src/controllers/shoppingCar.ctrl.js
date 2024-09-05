@@ -5,6 +5,7 @@ var moment=require('moment');
 
 async function cancelShoppincar(req,res){
     const{itemLotArray,accountId,shoppicarId}=req.body  
+    console.log(req.body)
     const t = await model.sequelize.transaction();
     let audit=[]
     const toDay=moment(); 
