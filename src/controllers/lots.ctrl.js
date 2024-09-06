@@ -68,7 +68,7 @@ async function itemLotupdate(req,res){ // edita un nuevo lote de articulos
     const{items,id,lotId}=req.body;
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     let audit=[]   
-    const toDay=moment(); 
+    const toDay=moment().format('lll');   
     audit.push({
         "action":"Editó item "+ id ,// que accion se realizó
         "people":dataToken.people.document,// quien la realizo (Nombre)
@@ -104,7 +104,7 @@ async function itemLotCreate(req,res){ // crea un nuevo item en un lote
     console.log(req.body);
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     let audit=[]   
-    const toDay=moment(); 
+    const toDay=moment().format('lll');  
     audit.push({
         "action":"Creó nuevo item en el lote "+ lotId,// que accion se realizó
         "people":dataToken.people.document,// quien la realizo (Nombre)
@@ -187,15 +187,15 @@ async function lotEdit(req,res){
     const{articleId,receivedDate,expDate,isActived,note,lotId}=req.body;
     console.log(req.body);
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
-    let audit={}   
-    const toDay=moment(); 
-    audit={
+    let audit=[]   
+    const toDay=moment().format('lll');   
+    audit.push({
         "action":"Modifica encabezado de lote "+lotId,// que accion se realizó
         "people":dataToken.people.document,// quien la realizo (Nombre)
         "account":dataToken.account, //  quien la realizó (cuenta de usuario)
         "moment": toDay, //  cuando la realizó (Fecha hora)
         "values":{articleId,receivedDate,expDate,isActived,note}
-    }; 
+    }); 
     const lotEdit=async ()=>{
         const t = await model.sequelize.transaction();        
         await model.lots.findByPk(lotId)
@@ -294,7 +294,7 @@ async function lotCreate(req,res){ // crea un nuevo lote de articulos
     console.log(req.body)
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     let audit=[]   
-    const toDay=moment(); 
+    const toDay=moment().format('lll');   
     audit.push({
         "action":"Creó nuevo lote",// que accion se realizó
         "people":dataToken.people.document,// quien la realizo (Nombre)

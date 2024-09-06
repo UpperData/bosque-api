@@ -4,11 +4,11 @@ const serviceToken=require('./serviceToken.ctrl');
 var moment=require('moment');
 
 async function cancelShoppincar(req,res){
-    const{itemLot,accountId}=req.body  
+    const{itemLot,accountId,isSUW}=req.body  
     console.log(req.body)    
     const t = await model.sequelize.transaction();
     let audit=[]
-    const toDay=moment(); 
+    const toDay=moment().format('lll');   
     audit.push({
         "action":"Cliente actualizó" ,// que accion se realizó        
         "account":accountId, //  quien la realizó (cuenta de usuario)
@@ -16,21 +16,25 @@ async function cancelShoppincar(req,res){
         "itemLot": itemLot
     });
     return await model.shoppingCar.update({orderStatusId:6},{where:{id:itemLot.shoppingCarId},transaction:t})
-    .then(async function (rsUpdateShpp){        
-        await model.itemLot.update({conditionId:1 },{where:{id:itemLot.id},transaction:t})
+   /*  .then(async function (rsUpdateShpp){        
+        await model.itemLot.findOne({where:{id:itemLot.id}}{
+
+
+
+            await model.itemLot.update({conditionId:1 },{where:{id:itemLot.id},transaction:t}) */
         .then(async function (rsUpdateItem){
+            if(isSUW)
             t.commit();
             res.status(200).json({"result":true,"message":"Eliminado"});         
-        }).catch(async function(error){
-            console.log(error)
-            t.rollback();
-            res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
-        })  
-    }).catch(async function(error){
-        console.log(error)
-        t.rollback();
-        res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
-    })
+            }).catch(async function(error){
+                console.log(error)
+                t.rollback();
+                res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+            }).catch(async function(error){
+                console.log(error)
+                t.rollback();
+                res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+        })
 }
 
 
@@ -40,7 +44,7 @@ async function editShoppincar(req,res){
     let SUW=JSON.parse(isSUW);
     
     let audit=[]
-    const toDay=moment(); 
+    const toDay=moment().format('lll');   
     audit.push({
         "action":"Cliente actualizó" ,// que accion se realizó        
         "account":accountId, //  quien la realizó (cuenta de usuario)
@@ -184,7 +188,7 @@ async function AddShoppingCar(req,res){
     let SUW=JSON.parse(isSUW);
     
     let audit=[]
-    const toDay=moment(); 
+    const toDay=moment().format('lll');   
     audit.push({
         "action":"Cliente reservó" ,// que accion se realizó        
         "account":accountId, //  quien la realizó (cuenta de usuario)

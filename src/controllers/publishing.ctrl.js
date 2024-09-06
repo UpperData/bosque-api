@@ -41,7 +41,7 @@ async function setPublishing(req,res){
     const t= await model.sequelize.transaction();
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     let audit=[]   
-    const toDay=moment(); 
+    const toDay=moment().format('lll');   
     audit.push({
         "action":isPublished?"Publico":"dio de baja"+ articleId ,// que accion se realizó
         "people":dataToken.people.document,// quien la realizo (Nombre)

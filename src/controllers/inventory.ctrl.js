@@ -268,6 +268,7 @@ async function assignmentUpdate(req,res){
             res.status(403).json({data:{"result":false,"message":"Cuenta no tiene membresía de médico"}});
         }       
     }).catch(async function(error){                
+        console.log(error)
         t.rollback();
         res.status(403).json({data:{"result":false,"message":error.message}});
     })    
@@ -275,10 +276,11 @@ async function assignmentUpdate(req,res){
 
 async function articleNew(req,res){
     const{name,description,minStock,image,price,isSUW}=req.body;
+    
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     const t = await model.sequelize.transaction();  
     let audit=[]   
-    const toDay=moment(); 
+    const toDay=moment().format('lll');     
     audit.push({
         "action":"Creo nuevo articulo -> "+name ,// que accion se realizó
         "people":dataToken.people.document,// quien la realizo (Nombre)
@@ -292,7 +294,8 @@ async function articleNew(req,res){
         then(async function(rsArticle){
             t.commit();
             res.status(200).json({data:{"result":true,"message":"Artículo agregado"}});
-    }).catch(async function(error){       
+    }).catch(async function(error){ 
+        console.log(error)      
         t.rollback();
         res.status(403).json({data:{"result":false,"message":error.message}});
     })
@@ -300,6 +303,7 @@ async function articleNew(req,res){
 async function articleUpdate(req,res){
     const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
     const{id,name,description,isActived,price,minStock,image,isSUW,isPublished}=req.body;
+    console.log(req.body);
     const t=await model.sequelize.transaction();
     await model.article.update({name,description,isActived,price,minStock,image,isSUW,isPublished},{where:{id}},{transaction:t}).then(async function(rsArticle){
         t.commit();
