@@ -10,18 +10,17 @@ async function cancelShoppincar(req,res){
     let audit=[]
     const toDay=moment().format('lll');   
     audit.push({
-        "action":"Cliente actualizó" ,// que accion se realizó        
+        "action":"Cliente cancelo pedido # "+itemLot.shoppingCarId ,// que accion se realizó        
         "account":accountId, //  quien la realizó (cuenta de usuario)
         "moment": toDay, //  cuando la realizó (Fecha hora)
         "itemLot": itemLot
     });
     return await model.shoppingCar.update({orderStatusId:6},{where:{id:itemLot.shoppingCarId},transaction:t})
-   /*  .then(async function (rsUpdateShpp){        
-        await model.itemLot.findOne({where:{id:itemLot.id}}{
-
-
-
-            await model.itemLot.update({conditionId:1 },{where:{id:itemLot.id},transaction:t}) */
+    .then(async function (rsUpdateShpp){
+        var qtyCar=rsUpdateShpp.qty||0;            
+        var qtyItem=itemLot.weight||0;  
+        var qty=qtyItem+qtyCar;
+        await model.itemLot.update({conditionId:1,weight:qty },{where:{id:itemLot.id},transaction:t})
         .then(async function (rsUpdateItem){
             if(isSUW)
             t.commit();
@@ -30,11 +29,17 @@ async function cancelShoppincar(req,res){
                 console.log(error)
                 t.rollback();
                 res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
-            }).catch(async function(error){
-                console.log(error)
-                t.rollback();
-                res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
-        })
+            })
+        }).catch(async function(error){
+            console.log(error)
+            t.rollback();
+            res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+        
+    }).catch(async function(error){
+        console.log(error)
+        t.rollback();
+        res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});
+    })
 }
 
 
