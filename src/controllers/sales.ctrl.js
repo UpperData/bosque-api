@@ -48,7 +48,7 @@ async function pendinOrders(req,res){
                     required:true,
                     include:[{
                         model:model.article,
-                        attributes:['id','name'],
+                        attributes:['id','name','isSUW'],
                         required:true
                     }]
                 }] 
