@@ -196,8 +196,10 @@ async function assignmentNew(req,res){
         res.status(403).json({data:{"result":false,"message":error.message}});
     })    
 }
+
 async function assignmentByDoctor(req,res){
     const{accountId}=req.params;
+
     await model.accountRole.findAndCountAll({
         attributes:['id'],
         where:{

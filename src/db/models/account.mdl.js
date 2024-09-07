@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       account.hasMany(models.accountRole);
       account.hasMany(models.employeeFile);
+      account.hasMany(models.shoppingCar);
     }
   };
   account.init({    
