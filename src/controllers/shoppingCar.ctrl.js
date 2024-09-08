@@ -21,25 +21,24 @@ async function cancelShoppincar(req,res){
         var qtyItem=itemLot.weight||0;  
         var qty=qtyItem+qtyCar;
         await model.itemLot.update({conditionId:1,weight:qty },{where:{id:itemLot.id},transaction:t})
-        .then(async function (rsUpdateItem){
-            if(isSUW)
-            t.commit();
-            res.status(200).json({"result":true,"message":"Eliminado"});         
-            }).catch(async function(error){
-                console.log(error)
-                t.rollback();
-                res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
-            })
+        .then(async function (rsUpdateItem){           
+                t.commit();
+                res.status(200).json({"result":true,"message":"Liberado"});         
         }).catch(async function(error){
             console.log(error)
             t.rollback();
             res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
-        
+        })
     }).catch(async function(error){
         console.log(error)
         t.rollback();
-        res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});
-    })
+        res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+        
+}).catch(async function(error){
+    console.log(error)
+    t.rollback();
+    res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});
+})
 }
 
 
