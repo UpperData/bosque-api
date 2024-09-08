@@ -63,9 +63,9 @@ async function pendinOrders(req,res){
                 rsSales.rows[index].subTotal=parseFloat(parseFloat(rsSales.rows[index]["itemLot.lot.article.price"]).toFixed(2) * parseFloat(rsSales.rows[index]["itemLot.weight"]).toFixed(2)).toFixed(2);
                 rsSales.rows[index]["itemLot.lot.article.price"]=parseFloat(rsSales.rows[index]["itemLot.lot.article.price"]).toFixed(2)
             }
-            total +=rsSales.rows[index].subTotal;
+            total +=parseFloat(rsSales.rows[index].subTotal).toFixed(2);
         }
-        rsSales.totalOrder=total;
+        rsSales.totalOrder=parseFloat(total).toFixed(2);;
         res.status(200).json({"result":true,"data":rsSales});    
     }).catch(async function(error){
         console.log(error);
