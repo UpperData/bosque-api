@@ -5,6 +5,31 @@ const generals=require('./generals.ctrl');
 var moment=require('moment');
 const { raw } = require('express');
 
+async function itemLotRelease(req,res){ // edita un nuevo lote de articulos
+    const{id,lotId}=req.body;
+    const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
+    let audit=[]   
+    const toDay=moment().format('lll');   
+    audit.push({
+        "action":"Libero item "+ id ,// que accion se realizó
+        "people":dataToken.people.document,// quien la realizo (Nombre)
+        "account":dataToken.account, //  quien la realizó (cuenta de usuario)
+        "moment": toDay, //  cuando la realizó (Fecha hora)
+        "values":{items,lotId}
+    });       
+    const t = await model.sequelize.transaction();
+    await model.itemLot.update({conditionId:6,audit},{where:{id}},{transaction:t})
+    .then(async function(rsItemsLot){               
+        
+        t.commit(); 
+        res.status(200).json({data:{"result":true,"message":"Pedido liberado"}});   
+        
+    }).catch(async function(error){        
+        t.rollback();
+        res.status(403).json({data:{"result":false,"message":error.message}});
+    }) 
+       
+}
 async function itemByLot(req,res){
     const {lotId} =req.params
     await model.itemLot.findAll({
@@ -367,4 +392,5 @@ async function lotCreate(req,res){ // crea un nuevo lote de articulos
     })
     
 }
-module.exports={lotCreate,lotArticle,lotEdit,itemLotCreate,itemLotupdate,itemLotFind,itemLotByArticle,itemByLot}
+module.exports={lotCreate,lotArticle,lotEdit,itemLotCreate,itemLotupdate,
+    itemLotFind,itemLotByArticle,itemByLot,itemLotRelease}
