@@ -48,14 +48,23 @@ async function pendinOrders(req,res){
                     required:true,
                     include:[{
                         model:model.article,
-                        attributes:['id','name','isSUW'],
+                        attributes:['id','name','isSUW','price'],
                         required:true
                     }]
                 }] 
             } 
         ],
         raw:true
-    }).then(async function(rsSales){
+    }).then(async function(rsSales){        
+        let total=0.0;
+        for (let index = 0; index < rsSales.count; index++) {
+            
+            if(rsSales.rows[index]["itemLot.lot.article.isSUW"]){                
+                rsSales.rows[index].subTotal=parseFloat(parseFloat(rsSales.rows[index]["itemLot.lot.article.price"]).toFixed(2) * parseFloat(rsSales.rows[index]["itemLot.weight"]).toFixed(2)).toFixed(2)
+            }
+            total +=rsSales.rows[index].subTotal;
+        }
+        rsSales.totalOrder=total;
         res.status(200).json({"result":true,"data":rsSales});    
     }).catch(async function(error){
         console.log(error);
