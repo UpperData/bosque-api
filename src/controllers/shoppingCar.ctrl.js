@@ -109,7 +109,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
         required:true,
         include:[{
             model:model.itemLot,
-            attributes:['id','weight','note'],
+            attributes:['id','weight','note','lotId'],
             required:true,            
             include:[{
                 model:model.shoppingCar,
@@ -168,7 +168,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
                         subT =subT + parseFloat(salePrice);
                         ProductItems.push({ 
                             id:rsCar[index]['lots'][Jindex]['itemLots'][Kindex].id,
-                            lotId:rsCar[index]['lots'][Jindex].id,
+                            lotId:rsCar[index]['lots'][Jindex]['itemLots'][Kindex].lotId,
                             weight:parseFloat(weight).toFixed(2),                            
                             dispatch:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch,
                             quantity:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].qty || "0.0",
