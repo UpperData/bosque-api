@@ -20,15 +20,24 @@ async function cancelShoppincar(req,res){
         var qtyCar=rsUpdateShpp.qty||0;            
         var qtyItem=itemLot.weight||0;  
         var qty=qtyItem+qtyCar;
-        await model.itemLot.update({conditionId:1,weight:qty },{where:{id:itemLot.id},transaction:t})
-        .then(async function (rsUpdateItem){           
-                t.commit();
-                res.status(200).json({"result":true,"message":"Liberado"});         
+        // activar lote
+        await model.lot.update({isActived:true},{where:{id:itemLot.lotId},transaction:t})
+        .then(async function(rsActiveLot){
+            await model.itemLot.update({conditionId:1,weight:qty },{where:{id:itemLot.id},transaction:t})
+            .then(async function (rsUpdateItem){           
+                    t.commit();
+                    res.status(200).json({"result":true,"message":"Orden liberada"});         
+            }).catch(async function(error){
+                console.log(error)
+                t.rollback();
+                res.status(403).json({"result":false,"message":"Algo salió mal activando item, intente nuevamente"});        
+            })
         }).catch(async function(error){
             console.log(error)
             t.rollback();
-            res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+            res.status(403).json({"result":false,"message":"Algo salió mal activando lote, intente nuevamente"});        
         })
+        
     }).catch(async function(error){
         console.log(error)
         t.rollback();
@@ -157,6 +166,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
                         subT =subT + parseFloat(salePrice);
                         ProductItems.push({ 
                             id:rsCar[index]['lots'][Jindex]['itemLots'][Kindex].id,
+                            lotId:rsCar[index]['lots'][Jindex].id,
                             weight:parseFloat(weight).toFixed(2),                            
                             dispatch:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].dispatch,
                             quantity:rsCar[index]['lots'][Jindex]['itemLots'][Kindex]['shoppingCars'][Mindex].qty || "0.0",

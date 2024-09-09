@@ -83,11 +83,11 @@ async function assignmentArticle(articleId,conditionId){
                 include:[{
                     model:model.lots,                    
                         attributes:['id'] ,                   
-                        where:{isActived:true}, 
+                        /* where:{isActived:true},  */
                         required:true,                       
                         include:[{
                             model:model.article,
-                            where:{id:articleId,isActived:true},
+                            where:{id:articleId,/* isActived:true */},
                             attributes:['id','name','description','isSUW'],
                             required:true
                         }]
