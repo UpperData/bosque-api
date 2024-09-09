@@ -232,7 +232,7 @@ async function AddShoppingCar(req,res){
                             // valida si es el último item del lote
                             if(lot.count==1){  
                                 // unactiva lote si es el ultimo
-                                await model.lots.update({isActived:false},{where:{id:lot.rows[0].Lotid},transaction:t})
+                                await model.lots.update({isActived:false},{where:{id:lot.rows[0].lotId},transaction:t})
                               }
                         }else{ // venta por kg
                             // calcular existencia
