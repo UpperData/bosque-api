@@ -330,7 +330,7 @@ async function inventoryGet(req,res){
             where:{
                 id:articelId,
                 isActived:isArtActived,
-                isSUW:true
+                isPublished:true
                 /* ...(isArtActived == "true" ||  isArtActived == "false" && {
                     isActived:isArtActived}) */
             },
