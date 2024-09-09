@@ -15,13 +15,13 @@ async function cancelShoppincar(req,res){
         "moment": toDay, //  cuando la realizó (Fecha hora)
         "itemLot": itemLot
     });
-    return await model.shoppingCar.update({orderStatusId:6},{where:{id:itemLot.shoppingCarId},transaction:t})
+    return await model.shoppingCar.update({orderStatusId:6},{where:{id:itemLot.shoppingCarId},returning: true,transaction:t})
     .then(async function (rsUpdateShpp){
         var qtyCar=rsUpdateShpp.qty||0;            
         var qtyItem=itemLot.weight||0;  
         var qty=qtyItem+qtyCar;
         // activar lote
-        await model.lot.update({isActived:true},{where:{id:itemLot.lotId},transaction:t})
+        await model.lots.update({isActived:true},{where:{id:itemLot.lotId},transaction:t})
         .then(async function(rsActiveLot){
             await model.itemLot.update({conditionId:1,weight:qty },{where:{id:itemLot.id},transaction:t})
             .then(async function (rsUpdateItem){           
