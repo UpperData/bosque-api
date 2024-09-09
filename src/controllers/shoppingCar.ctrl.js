@@ -263,7 +263,8 @@ async function AddShoppingCar(req,res){
                         .then(async function(rsCar){                       
                             t.commit();
                             res.status(200).json({"result":true,"message":"Ok. Reserva exitosa, vea 'Mis pedidos' "}); 
-                        }).catch(async function(error){    
+                        }).catch(async function(error){  
+                            console.log(error);  
                             t.rollback();                                                       
                             res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
                         })
