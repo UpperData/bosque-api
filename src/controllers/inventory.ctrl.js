@@ -345,8 +345,7 @@ async function inventoryGet(req,res){
                     where:{ conditionId},
                     required:true
                 }]
-            }],
-            order:['name']
+            }]
         }).then(async function(rsArticle){
             if(rsArticle){
                 res.status(200).json({"result":true,"message":"Busqueda satisfatoria","data":rsArticle});        
