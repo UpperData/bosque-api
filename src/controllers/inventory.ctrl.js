@@ -359,7 +359,8 @@ async function inventoryGet(req,res){
         return await model.article.findAll({
             attributes:['id','name','description','price','image','minStock','isSUW','isActived','isPublished'],
             where:{
-                isActived:isArtActived 
+                isActived:isArtActived,
+                isPublished:true
             },
             include:[{
                 model:model.lots,
