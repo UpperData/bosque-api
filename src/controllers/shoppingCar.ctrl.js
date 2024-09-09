@@ -227,7 +227,7 @@ async function AddShoppingCar(req,res){
                     })
                     if(itemActived.length>0){ // si item esta disponible
                         if(SUW){ // venta por unidapesada
-
+                            newQty=0
                             rsCondition=await model.itemLot.update({conditionId:2},{where:{id:itemLotId},transaction:t})    
                             // buca si tiene más lotes
                             lot = await model.itemLot.findAndCountAll({where:{lotId:itemActived[0].lotId,conditionId:1},transaction:t}) //
@@ -241,6 +241,7 @@ async function AddShoppingCar(req,res){
                             await model.itemLot.findOne({attributes:['weight'],where:{id:itemLotId},transaction:t})
                             .then(async function (rsExistence){
                                 console.log("Desapcho: "+qty);
+                                newQty=qty
                                 if(parseFloat(rsExistence.weight)>=parseFloat(qty)){
                                     diff=parseFloat(rsExistence.weight)-parseFloat(qty)
                                     if(diff>0){isActived=true;}
@@ -259,7 +260,7 @@ async function AddShoppingCar(req,res){
                                 res.status(403).json({"result":false,"message":"Error validando existencia, intente nuevamente"});        
                             })                        
                         }
-                        await model.shoppingCar.create({itemLotId,accountId,dispatch,orderStatusId:1,qty,audit},{transaction:t})
+                        await model.shoppingCar.create({itemLotId,accountId,dispatch,orderStatusId:1,newQty,audit},{transaction:t})
                         .then(async function(rsCar){                       
                             t.commit();
                             res.status(200).json({"result":true,"message":"Ok. Reserva exitosa, vea 'Mis pedidos' "}); 
