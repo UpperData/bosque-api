@@ -196,7 +196,7 @@ async function getShoppingCar(req,res){ // busca especia de un carrito
 }) 
 }
 async function AddShoppingCar(req,res){      
-    const{itemLotId,accountId,dispatch,isSUW}=req.body   // <<< Recibir isSUW
+    const{itemLotId,accountId,dispatch,isSUW,qty}=req.body   // <<< Recibir isSUW
     // const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', ''));         
     const t = await model.sequelize.transaction();
     let SUW=JSON.parse(isSUW);
@@ -219,39 +219,57 @@ async function AddShoppingCar(req,res){
             .then(async function(rsAccount){
                 let rsCondition;
                 if(rsAccount.count>0){ // cuenta activa
-                    if(SUW){ // venta por unidapesada
-                        rsCondition=await model.itemLot.update({conditionId:2},{where:{id:itemLotId},transaction:t})    
-                    }else{ // venta por kg
-                        // calcular existencia
-                        await model.itemLot.findOne({attributes:['weight'],where:{id:itemLotId},transaction:t})
-                        .then(async function (rsExistence){
-                            console.log("Desapcho: "+dispatch);
-                            if(rsExistence.weight>=parseFloat(dispatch)){
-                                diff=rsExistence.weight-dispatch
-                                if(diff>0){isActived=true;}
-                                else{
-                                    isActived=false;
-                                }
-                                await model.itemLot.update({weight:diff,isActived },
-                                    {where:{id:itemLotId},transaction:t})          
-                            }else{
-                                t.rollback();                                                       
-                                res.status(403).json({"result":false,"message":"Cantidad solicitada supera lo disponible( "+rsExistence.weight+" Kg)"});                                    
-                            }
-                        }).catch(async function(error){ 
-                            console.log(error)   
-                            t.rollback();                                                       
-                            res.status(403).json({"result":false,"message":"Error validando existencia, intente nuevamente"});        
-                        })                        
-                    }                    
-                    await model.shoppingCar.create({itemLotId,accountId,dispatch,orderStatusId:1,audit},{transaction:t})
-                    .then(async function(rsCar){                       
-                        t.commit();
-                        res.status(200).json({"result":true,"message":"Ok. Reserva exitosa, vea 'Mis pedidos' "}); 
-                    }).catch(async function(error){    
-                        t.rollback();                                                       
-                        res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
+                    // so lote y item estan activos
+                    itemActived=await model.itemLot.findAll({
+                        where:{id:itemLotId,conditionId:1}                        
                     })
+                    if(itemActived.length>0){ // si item esta disponible
+                        if(SUW){ // venta por unidapesada
+
+                            rsCondition=await model.itemLot.update({conditionId:2},{where:{id:itemLotId},transaction:t})    
+                            // buca si tiene más lotes
+                            lot = await model.itemLot.findAndCountAll({where:{lotId:itemActived[0].lotId,conditionId:1},transaction:t}) //
+                            // valida si es el último item del lote
+                            if(lot.count==1){  
+                                // unactiva lote si es el ultimo
+                                await model.lot.update({isActived:false},{where:{id:itemLotId},transaction:t})
+                              }
+                        }else{ // venta por kg
+                            // calcular existencia
+                            await model.itemLot.findOne({attributes:['weight'],where:{id:itemLotId},transaction:t})
+                            .then(async function (rsExistence){
+                                console.log("Desapcho: "+qty);
+                                if(parseFloat(rsExistence.weight)>=parseFloat(qty)){
+                                    diff=parseFloat(rsExistence.weight)-parseFloat(qty)
+                                    if(diff>0){isActived=true;}
+                                    else{
+                                        isActived=false;
+                                    }
+                                    await model.itemLot.update({weight:diff,isActived },
+                                        {where:{id:itemLotId},transaction:t})          
+                                }else{
+                                    t.rollback();                                                       
+                                    res.status(403).json({"result":false,"message":"Cantidad solicitada supera lo disponible( "+rsExistence.weight+" Kg)"});                                    
+                                }
+                            }).catch(async function(error){ 
+                                console.log(error)   
+                                t.rollback();                                                       
+                                res.status(403).json({"result":false,"message":"Error validando existencia, intente nuevamente"});        
+                            })                        
+                        }
+                        await model.shoppingCar.create({itemLotId,accountId,dispatch,orderStatusId:1,qty,audit},{transaction:t})
+                        .then(async function(rsCar){                       
+                            t.commit();
+                            res.status(200).json({"result":true,"message":"Ok. Reserva exitosa, vea 'Mis pedidos' "}); 
+                        }).catch(async function(error){    
+                            t.rollback();                                                       
+                            res.status(403).json({"result":false,"message":"Error en reservación, intente nuevamente"});        
+                        })
+                    }else{
+                        t.rollback();                                                       
+                        res.status(403).json({"result":false,"message":"Producto agotado"});        
+                    } 
+                    
                 }else{// cuenta inactiva
                     t.rollback();
                     res.status(403).json({"result":false,"message":"No posee una cuenta activa para comprar"});        

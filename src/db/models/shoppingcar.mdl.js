@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     accountId: DataTypes.INTEGER,
     itemLotId: DataTypes.INTEGER,
     dispatch: DataTypes.STRING,
+    qty : DataTypes.STRING,
     orderStatusId:DataTypes.INTEGER,
     audit:DataTypes.JSONB
   }, {

@@ -82,7 +82,7 @@ async function assignmentArticle(articleId,conditionId){
             include:[{
                 model:model.itemLot,
                 attributes:['id','weight'],
-                where:{ conditionId},
+                /* where:{ conditionId}, */
                 required:true,                    
                 include:[{
                     model:model.lots,                    
@@ -97,8 +97,9 @@ async function assignmentArticle(articleId,conditionId){
                         }]
                 }]
             }],nest: true
-        }); 
-        
+        });
+        console.log("rsAssignmet.rows"); 
+        console.log(rsAssignmet.rows);
         if(rsAssignmet.count>0){
             
             if(rsAssignmet.rows[0].itemLot.lot.article.isSUW){            
@@ -107,12 +108,14 @@ async function assignmentArticle(articleId,conditionId){
                 // sumar los pesos
                 rsTotalWeight=0;
                 for (let index = 0; index < rsAssignmet.count; index++) {
-                    rsTotalWeight += parseFloat(rsAssignmet.rows[index].dispatch)                   
+                    console.log(rsAssignmet.rows[index].qty)
+                    rsTotalWeight = parseFloat(rsTotalWeight) +parseFloat(rsAssignmet.rows[index].qty)                   
                 }
                 return rsTotalWeight + ' kg';
-       }
+            }
        }else{
-        return ('-');
+        console.log("Gion");
+        return (0.0);
        }
     }catch(error){
         console.log(error);
@@ -326,7 +329,8 @@ async function inventoryGet(req,res){
             attributes:['id','name','description','price','image','minStock','isSUW','isActived','isPublished'],
             where:{
                 id:articelId,
-                isActived:isArtActived 
+                isActived:isArtActived,
+                isSUW:true
                 /* ...(isArtActived == "true" ||  isArtActived == "false" && {
                     isActived:isArtActived}) */
             },
@@ -450,7 +454,7 @@ async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de
             rsInventory[index].dataValues.asignados=0;
             
             rsInventory[index].dataValues.almacen= await currentArticleStock(rsInventory[index].dataValues.id,1);
-            rsInventory[index].dataValues.asignados=await assignmentArticle(rsInventory[index].dataValues.id,2);;
+            rsInventory[index].dataValues.asignados=await assignmentArticle(rsInventory[index].dataValues.id,2);
             rsInventory[index].dataValues.dolarValue=parseFloat(rsInventory[index].price).toFixed(2); //agrega precio en dolares segun el valor actual
             totalPriceInventory=totalPriceInventory+( parseFloat(rsInventory[index].price).toFixed(2) * 
                             parseFloat(rsInventory[index].dataValues.almacen=='-'?0:rsInventory[index].dataValues.almacen).toFixed(2));
