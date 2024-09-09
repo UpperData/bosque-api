@@ -6,6 +6,7 @@ var moment=require('moment');
 var fs = require("fs");
 const Excel = require("exceljs");
 var path = require("path");
+const { where } = require('sequelize/lib/sequelize');
 
 async function downloadInventorySheet(req, res) {
     
@@ -75,6 +76,9 @@ async function inventoryArticle(req,res){ // optiene el inventario actual, hoja 
 async function assignmentArticle(articleId,conditionId){  
     try{
         rsAssignmet= await model.shoppingCar.findAndCountAll({            
+            where:{orderStatusId:{
+                [Op.lte]:3
+            }},
             include:[{
                 model:model.itemLot,
                 attributes:['id','weight'],
