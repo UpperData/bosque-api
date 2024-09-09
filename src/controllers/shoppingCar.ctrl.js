@@ -15,6 +15,8 @@ async function cancelShoppincar(req,res){
         "moment": toDay, //  cuando la realizó (Fecha hora)
         "itemLot": itemLot
     });
+    console.log("itemLot.shoppingCarId");
+    console.log(itemLot.shoppingCarId);
     return await model.shoppingCar.update({orderStatusId:6},{where:{id:itemLot.shoppingCarId},returning: true,transaction:t})
     .then(async function (rsUpdateShpp){
         var qtyCar=rsUpdateShpp.qty||0;            
