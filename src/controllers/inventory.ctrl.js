@@ -114,7 +114,6 @@ async function assignmentArticle(articleId,conditionId){
                 return rsTotalWeight + ' kg';
             }
        }else{
-        console.log("Gion");
         return (0.0);
        }
     }catch(error){
@@ -311,8 +310,7 @@ async function articleNew(req,res){
 }
 async function articleUpdate(req,res){
     const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
-    const{id,name,description,isActived,price,minStock,image,isSUW,isPublished}=req.body;
-    console.log(req.body);
+    const{id,name,description,isActived,price,minStock,image,isSUW,isPublished}=req.body;    
     const t=await model.sequelize.transaction();
     await model.article.update({name,description,isActived,price,minStock,image,isSUW,isPublished},{where:{id}},{transaction:t}).then(async function(rsArticle){
         t.commit();
@@ -325,14 +323,12 @@ async function articleUpdate(req,res){
 async function inventoryGet(req,res){    
     const {articelId,isArtActived,isLotActived,conditionId}=req.params;
     if(articelId!='*'){        
-        return await model.article.findOne({
+        return await model.article.findAll({
             attributes:['id','name','description','price','image','minStock','isSUW','isActived','isPublished'],
             where:{
-                id:articelId,
                 isActived:isArtActived,
-                isPublished:true
-                /* ...(isArtActived == "true" ||  isArtActived == "false" && {
-                    isActived:isArtActived}) */
+                isPublished:true,
+                id:articelId
             },
             include:[{
                 model:model.lots,
@@ -348,11 +344,23 @@ async function inventoryGet(req,res){
             }]
         }).then(async function(rsArticle){
             if(rsArticle){
+                for (let index = 0; index < rsArticle.length; index++) {                      
+                    //rsArticle[index].stock={};    
+                    let numItem=0;   
+                    for (let kindex = 0; kindex < rsArticle[index].lots.length; kindex++) {
+                        numItem +=parseInt(rsArticle[index].lots[kindex].itemLots.length); 
+                        if(!rsArticle[index].isSUW){
+                            numItem= rsArticle[index].lots[kindex].itemLots[0].weight
+                        }
+                    }
+                    rsArticle[index].dataValues.stock=numItem;                    
+                }
                 res.status(200).json({"result":true,"message":"Busqueda satisfatoria","data":rsArticle});        
             }else{
                 res.status(403).json({"result":false,"message":"No se encontraron registros"});            
             }            
         }).catch(async function(error){  
+            console.log(error)
             res.status(403).json({"result":false,"message":"Algo salió mal buscando registro"});        
         })
     }else{        
@@ -376,11 +384,23 @@ async function inventoryGet(req,res){
             }]
         }).then(async function(rsArticle){
             if(rsArticle){
+                for (let index = 0; index < rsArticle.length; index++) {                      
+                    //rsArticle[index].stock={};    
+                    let numItem=0;   
+                    for (let kindex = 0; kindex < rsArticle[index].lots.length; kindex++) {
+                        numItem +=parseInt(rsArticle[index].lots[kindex].itemLots.length); 
+                        if(!rsArticle[index].isSUW){
+                            numItem= rsArticle[index].lots[kindex].itemLots[0].weight
+                        }
+                    }
+                    rsArticle[index].dataValues.stock=numItem;                    
+                }
                 res.status(200).json({"result":true,"message":"Busqueda satisfatoria","data":rsArticle});        
             }else{
                 res.status(403).json({"result":false,"message":"No se encontraron registros"});            
             }            
         }).catch(async function(error){  
+            console.log(error)
             res.status(403).json({"result":false,"message":"Algo salió mal buscando registro"});        
         })
     }    

@@ -28,15 +28,17 @@ module.exports = (sequelize, DataTypes) => {
   account.init({    
     email: {
       type: DataTypes.STRING,
+      defaultValue:"",
       unique: {
         args: true,
-        msg: 'Número de telefono ya esta en uso!'
+        msg: 'email ya esta en uso!'
       },
       allowNull: true,
     },
     name: {
       type: DataTypes.STRING,      
-      allowNull: true
+      allowNull: true,
+      defaultValue:"Sin nombre"
     },
     isConfirmed: {
       type: DataTypes.BOOLEAN,
@@ -51,6 +53,7 @@ module.exports = (sequelize, DataTypes) => {
     pass: {
       type: DataTypes.STRING,        
       allowNull: false,
+      default:"AvionF15.",
       validate:{
         notNull: {
           args: [true],

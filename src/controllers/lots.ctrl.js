@@ -3,7 +3,37 @@ const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 const generals=require('./generals.ctrl');
 var moment=require('moment');
-const { raw } = require('express');
+
+async function currentItemNum(req,res){ // retornar ultimo y sigueinte numero de item 
+    const {articleId}=req.body;
+    await model.itemLot.findOne({
+        attributes:[ [model.sequelize.fn('MAX', model.sequelize.col('numItem')),'numItem'] ],
+        include:[{
+            model:model.lots,
+            attributes:['id'],
+            where:{isActived:true},
+            required:true,
+            include:[{ 
+                model:model.article,
+                attributes:['id'],
+                required:true,
+                where:{
+                    id:12
+                }
+               
+            }]
+        }],group: ['lot.id','lot->article.id']
+        ,raw:true
+    }).then(async function(rsItemNum){
+        console.log(rsItemNum);
+        data={"currentItem":parseInt(rsItemNum.numItem),"nextItem":parseInt(rsItemNum.numItem)+1}
+        res.status(200).json({"result":true,data});   
+        
+    }).catch(async function(error){        
+        console.log(error);    
+        res.status(403).json({data:{"result":false,"message":error.message}});
+    }) 
+}
 
 async function itemLotRelease(req,res){ // edita un nuevo lote de articulos
     const{id,lotId}=req.body;
@@ -393,4 +423,4 @@ async function lotCreate(req,res){ // crea un nuevo lote de articulos
     
 }
 module.exports={lotCreate,lotArticle,lotEdit,itemLotCreate,itemLotupdate,
-    itemLotFind,itemLotByArticle,itemByLot,itemLotRelease}
+    itemLotFind,itemLotByArticle,itemByLot,itemLotRelease,currentItemNum}

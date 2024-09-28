@@ -18,12 +18,25 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   itemLot.init({     
-    lotId: DataTypes.INTEGER,    
-    weight: DataTypes.DECIMAL,
-    conditionId: DataTypes.INTEGER,
-    note: DataTypes.STRING,
-    numItem: DataTypes.INTEGER,
-    audit:DataTypes.JSONB 
+    lotId: {
+      type:DataTypes.INTEGER
+    },    
+    weight: {
+      type:DataTypes.DECIMAL
+    },
+    conditionId: {
+      type:DataTypes.INTEGER
+    },
+    note: {
+      type: DataTypes.STRING,
+      defaultValue:"n/a",          
+    },
+    numItem: {
+      type:DataTypes.INTEGER
+    },
+    audit:{
+      type:DataTypes.JSONB
+    } 
   }, {
     sequelize,
     modelName: 'itemLot',
