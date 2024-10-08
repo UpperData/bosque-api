@@ -5,26 +5,30 @@ const generals=require('./generals.ctrl');
 var moment=require('moment');
 
 async function currentItemNum(req,res){ // retornar ultimo y sigueinte numero de item 
-    const {articleId}=req.body;
+    const {articleId}=req.params;
     await model.itemLot.findOne({
         attributes:[ [model.sequelize.fn('MAX', model.sequelize.col('numItem')),'numItem'] ],
         include:[{
             model:model.lots,
             attributes:['id'],
-            where:{isActived:true},
+            where:{isActived:true,articleId},
             required:true,
             include:[{ 
                 model:model.article,
                 attributes:['id'],
                 required:true,
                 where:{
-                    id:12
+                    id:articleId
                 }
                
             }]
         }],group: ['lot.id','lot->article.id']
         ,raw:true
     }).then(async function(rsItemNum){
+        if(!rsItemNum){
+            rsItemNum={};
+            rsItemNum.numItem=0;
+        } // primer item        
         console.log(rsItemNum);
         data={"currentItem":parseInt(rsItemNum.numItem),"nextItem":parseInt(rsItemNum.numItem)+1}
         res.status(200).json({"result":true,data});   
@@ -63,7 +67,7 @@ async function itemLotRelease(req,res){ // edita un nuevo lote de articulos
 async function itemByLot(req,res){
     const {lotId} =req.params
     await model.itemLot.findAll({
-        attributes:{exclude:['audit','updatedAt']},
+        attributes:{exclude:['audit']},
         where:{lotId},
         include:[
             {
@@ -120,7 +124,9 @@ async function itemLotFind(req,res){ // traer items
 }
 
 async function itemLotupdate(req,res){ // edita un nuevo lote de articulos
-    const{items,id,lotId}=req.body;
+    const{items,id,lotId,articleId}=req.body;
+    console.log("req.body");
+    console.log(req.body);
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     let audit=[]   
     const toDay=moment().format('lll');   
@@ -135,15 +141,57 @@ async function itemLotupdate(req,res){ // edita un nuevo lote de articulos
     const t = await model.sequelize.transaction();     
     if(items.length>0){
         for (let index = 0; index < items.length; index++) {
-            await model.itemLot.update({weight:items[index].weight,conditionId:items[index].conditionId,note:items[index].note,audit},{where:{id}},{transaction:t})
-            .then(async function(rsItemsLot){                
-                
-                insert_items++;
-                
+            await model.lots.findOne({ // busca un el numero de item para lotes de una especie
+                where:{isActived:true, articleId},
+                include:[{
+                    model:model.itemLot,
+                    where:{
+                        numItem:items[index].numItem,                        
+                    }
+                }],
+                raw:true
+            }).then(async function(rsNumValid){                
+                if(rsNumValid){
+                    if(rsNumValid['itemLots.numItem']==items[index].numItem){ // es mi propio registro
+                        await model.itemLot.update({
+                            weight:items[index].weight,
+                            conditionId:items[index].conditionId,
+                            note:items[index].note,
+                            audit                            
+                        },
+                            {where:{id}},{transaction:t})
+                        .then(async function(rsItemsLot){                        
+                            insert_items++;                        
+                        }).catch(async function(error){    
+                            console.log(error);    
+                            t.rollback();
+                            res.status(403).json({data:{"result":false,"message":error.message}});
+                        }) 
+                    }else{
+                        res.status(200).json({data:{"result":false,"message":"Número pertenece a otro Item"}});
+                    }                    
+                }else{
+                    await model.itemLot.update({
+                        weight:items[index].weight,
+                        conditionId:items[index].conditionId,
+                        note:items[index].note,
+                        audit,
+                        numItem:items[index].numItem
+                    },
+                        {where:{id}},{transaction:t})
+                    .then(async function(rsItemsLot){                        
+                        insert_items++;                        
+                    }).catch(async function(error){    
+                        console.log(error);    
+                        t.rollback();
+                        res.status(403).json({data:{"result":false,"message":error.message}});
+                    })
+                }
             }).catch(async function(error){        
+                console.log(error);
                 t.rollback();
                 res.status(403).json({data:{"result":false,"message":error.message}});
-            }) 
+            })
         }
         if(insert_items){
             t.commit(); 
@@ -155,8 +203,7 @@ async function itemLotupdate(req,res){ // edita un nuevo lote de articulos
     }      
 }
 async function itemLotCreate(req,res){ // crea un nuevo item en un lote
-    const{items,lotId}=req.body;     
-    console.log(req.body);
+    const{items,lotId}=req.body;         
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     let audit=[]   
     const toDay=moment().format('lll');  
@@ -171,14 +218,23 @@ async function itemLotCreate(req,res){ // crea un nuevo item en un lote
     const newItem= async ()=>{
         const t = await model.sequelize.transaction(); 
         let insert_items=0;
-        let numItem=null;
+        let numItem=null;        
         await model.itemLot.max('numItem',{where:{lotId}}) //obtiene el item mayor
         .then(async function(rsLotItemNum){               
             numItem=rsLotItemNum;
             if (!rsLotItemNum){numItem=0}   
             if(items.length>0){
-                for (let index = 0; index < items.length; index++) {                
-                    await model.itemLot.create({lotId,weight:items[index].weight,conditionId:items[index].conditionId,note:items[index].note,numItem:numItem + 1,audit},{transaction:t})
+                for (let index = 0; index < items.length; index++) {
+                    //valida que iten no pertenece a otro item activo
+
+                    await model.itemLot.create({
+                        lotId,
+                        weight:items[index].weight,
+                        conditionId:items[index].conditionId,
+                        note:items[index].note,
+                        numItem:items[index].numItem?items[index].numItem:numItem + 1,
+                        audit},
+                        {transaction:t})
                     .then(async function(rsItemsLot){                
                         
                         insert_items++;
@@ -213,10 +269,10 @@ async function itemLotCreate(req,res){ // crea un nuevo item en un lote
         where:{id:lotId},
         raw:true
     })
-    .then(async function(rsLotArticle){
-        console.log(rsLotArticle);
+    .then(async function(rsLotArticle){        
         if(rsLotArticle){ //si el artículo del lote está activo
             if(rsLotArticle['article.isSUW']){ //si se vende por unidad
+
                 newItem()//Registrar Item
                 res.status(200).json({data:{"result":true,"message":"Item registrado"}});
             }else{ // si se vende por peso
@@ -346,7 +402,8 @@ async function lotArticle(req,res){
 }
 async function lotCreate(req,res){ // crea un nuevo lote de articulos
     const{articleId,receivedDate,expDate,isActived,note,items}=req.body;
-    console.log(req.body)
+    console.log("req.body");
+    console.log(req.body);
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     let audit=[]   
     const toDay=moment().format('lll');   
@@ -371,17 +428,14 @@ async function lotCreate(req,res){ // crea un nuevo lote de articulos
                             
                         }).catch(async function(error){   
                             console.log(error);
-                            t.rollback();
-                            // res.status(403).json({data:{"result":false,"message":error.message}});
+                            t.rollback();                            
                         }) 
                     }
                     if(insert_items==items.length){
-                        t.commit(); 
-                        // res.status(200).json({data:{"result":true,"message":"Lote "+rslot.id+" registrado"}});              
+                        t.commit();                         
                     }    
                 }else{ // no regsitra item y da respuesta
-                    t.commit(); 
-                    // res.status(200).json({data:{"result":true,"message":"Lote registrado"}}); 
+                    t.commit();                     
                 }            
             }).catch(async function(error){        
                 t.rollback();
@@ -392,7 +446,7 @@ async function lotCreate(req,res){ // crea un nuevo lote de articulos
     await model.article.findOne({where:{id:articleId,isActived:true}}) //Valida articulo activo
     .then(async function(rsAticle){
         
-        if(rsAticle){ // Si el articulo no  esta activo
+        if(rsAticle){ // Si el articulo esta activo
             await model.lots.findOne({where:{articleId:rsAticle.id,isActived:true}}) //Valida lotes activos del articulo
             .then(async function(rsLotValidate){
                 if(!rsLotValidate  ){ // si no hay lotes activos                     
