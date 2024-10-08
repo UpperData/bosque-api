@@ -283,8 +283,7 @@ async function assignmentUpdate(req,res){
 }
 
 async function articleNew(req,res){
-    const{name,description,minStock,image,price,isSUW}=req.body;
-    
+    const{name,description,minStock,image,price,isSUW}=req.body;    
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     const t = await model.sequelize.transaction();  
     let audit=[]   
@@ -311,8 +310,17 @@ async function articleNew(req,res){
 async function articleUpdate(req,res){
     const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
     const{id,name,description,isActived,price,minStock,image,isSUW,isPublished}=req.body;    
-    const t=await model.sequelize.transaction();
-    await model.article.update({name,description,isActived,price,minStock,image,isSUW,isPublished},{where:{id}},{transaction:t}).then(async function(rsArticle){
+    const t=await model.sequelize.transaction();    
+    let audit=[]   
+    const toDay=moment().format('lll');   
+    audit.push({
+        "action":"Actualizón artículo "+ id ,// que accion se realizó
+        "people":dataToken.people.document,// quien la realizo (Nombre)
+        "account":dataToken.account, //  quien la realizó (cuenta de usuario)
+        "moment": toDay, //  cuando la realizó (Fecha hora)
+        "values":req.body
+    }); 
+    await model.article.update({name,description,isActived,price,minStock,image,isSUW,isPublished,audit},{where:{id}},{transaction:t}).then(async function(rsArticle){
         t.commit();
         res.status(200).json({data:{"result":true,"message":"Artículo actualizado"}});
     }).catch(async function(error){

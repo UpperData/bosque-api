@@ -367,10 +367,9 @@ async function lotArticle(req,res){
     { 
         attributes: {exclude: ['audit','createdAt','updatedAt']},
         where:{
-        articleId, 
-        ...(isActived == "true" ||  isActived == "false" &&{
+            articleId,
             isActived
-        })},
+        },
         order:[['isActived','DESC'],['receivedDate','DESC']],
         include:[{            
             model:model.itemLot,
