@@ -29,8 +29,7 @@ async function pendinOrders(req,res){
             {
                 model:model.account,
                 attributes:['id', 'phone','name'],
-                where:{ ...(accountId>0 && {
-                    id:accountId})},
+                where:{id:accountId},
                 required:true
             },
             {
