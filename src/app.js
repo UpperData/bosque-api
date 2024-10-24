@@ -39,18 +39,15 @@ app.use(require('./routes/employeefile.route'));
 app.use(require('./routes/membership.route'));
 app.use(require('./routes/generals.route'));
 app.use(require('./routes/appointmet.route'));
-app.use(require('./routes/medicalReport.route'));
 app.use(require('./routes/inventory.route'));
-app.use(require('./routes/fixer.route'));
 app.use(require('./routes/patient.route'));
-app.use(require('./routes/voucher.route'));
 app.use(require('./routes/changeType.route'));
 app.use(require('./routes/reports.route'));
 app.use(require('./routes/store.route'));
 app.use(require('./routes/categories.route'));
 app.use(require('./routes/publishing.route'));
 app.use(require('./routes/shoppingCar.route'));
-app.use(require('./routes/sales.route'))
+app.use(require('./routes/sales.route'));
 
 app.listen(app.get('port'),function(){
     console.log('Bosque Marino is working in port:', app.get('port'));

@@ -143,7 +143,7 @@ async function getRoleByPhone(req,res){
 				res.status(403).json({"data":{"result":false,"message":error.message}}); 		
 			})
 		}else{
-			res.status(403).json({"data":{"result":false,"message":"No existe númeo de teléfono indicado"}}); 
+			res.status(403).json({"data":{"result":false,"message":"No existe número de teléfono indicado"}}); 
 		}
 		
 	}).catch(async function(error){		

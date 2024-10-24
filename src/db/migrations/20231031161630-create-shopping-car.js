@@ -34,6 +34,12 @@ module.exports = {
         type: Sequelize.JSONB,
         allowNull: false,
       },
+      discount:{
+        type:Sequelize.STRING
+      },
+      finalWeigth:{
+        type:Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

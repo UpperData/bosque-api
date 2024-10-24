@@ -35,6 +35,7 @@ router.get('/Inventory/currentNumItem/:articleId',forceBrute.notBruteSecure,lots
 
 
 // Stock
-router.get('/Inventory/stock/art/:articleId',forceBrute.notBruteSecure,inventory.currentArticleStock);
+router.get('/Inventory/stock/art/:articleId',forceBrute.notBruteSecure,inventory.stockByArticle);
 router.get('/Inventory/stock/download/:articleId',forceBrute.notBruteSecure,inventory.downloadInventorySheet);
+router.get('/Inventory/stock/ARTi/ALl',forceBrute.notBruteSecure,inventory.articleOnStockList);
 module.exports=router;

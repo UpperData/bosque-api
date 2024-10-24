@@ -1,7 +1,9 @@
 const model=require('../db/models/index');
 
 async function addGrantRole(req,res){
-    const {roleId,permission}=req.body;   
+    const {roleId,permission}=req.body;
+    console.log("req.body");   
+    console.log(req.body);
     const t= await model.sequelize.transaction();
     try{        
         for (let index = 0; index < permission.length; index++) {   

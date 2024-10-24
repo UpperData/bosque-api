@@ -3,8 +3,84 @@ const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 var moment=require('moment');
 
+async function editShoppincarOneField(req,res){
+    const{field,value,id}=req.body   // <<< Recibir isSUW    
+    const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
+    const t = await model.sequelize.transaction();
+    let audit=[]
+    const toDay=moment().format('lll');   
+    audit.push({
+        "action":"Actualizó carrito" ,// que accion se realizó  
+        "people":dataToken.people.document,// quien la realizo (Nombre)      
+        "account":dataToken.account, //  quien la realizó (cuenta de usuario)
+        "moment": toDay, //  cuando la realizó (Fecha hora)
+        "itemLot": id + "<-- Item afectado", 
+        "values":req.body // valires que actualizo
+    });
+
+    await model.shoppingCar.findOne({
+        attributes:['id'],
+        where:{itemLotId:id},        
+        include:[{
+            model:model.itemLot,
+                attributes:['id'],
+                required:true,
+                include:[{
+                    model:model.lots,
+                        attributes:['id'],
+                        required:true,
+                        include:[{
+                            model:model.article,
+                                attributes:['isSUW'],
+                                required:true
+                        }]
+                }]
+        }],
+        raw:true
+    }).then(async function (rsCar) {
+        console.log(rsCar);
+        await model.shoppingCar.update({[field]:value},{where:{id:rsCar.id},transaction:t})
+        .then(async function (rsUpdate){
+            if(!rsCar['itemLot.lot.article.isSUW']){ // Si se vende a granel
+                await model.itemLot.findOne({attributes:['weight'],where:{id:itemLotId},transaction:t})
+                .then(async function (rsExistence){           
+                    if(parseFloat(rsExistence.weight).toFixed(2)>=parseFloat(finalWeigth).toFixed(2)){
+                        diff=parseFloat(rsExistence.weight).toFixed(2)-parseFloat(finalWeigth).toFixed(2)
+                        let isActived;
+                        if(diff>0){isActived=true;}
+                        else{
+                            isActived=false;
+                        }
+                        await model.itemLot.update({weight:diff,isActived },
+                            {where:{id:itemLotId},transaction:t})          
+                    }else{
+                        t.rollback();                                                       
+                        res.status(403).json({"result":false,"message":"Cantidad solicitada supera lo disponible( "+rsExistence.weight+" Kg)"});                                    
+                    }
+                }).catch(async function(error){ 
+                    console.log(error)   
+                    t.rollback();                                                       
+                    res.status(403).json({"result":false,"message":"Error validando existencia, intente nuevamente"});        
+                })
+            }                                
+            t.commit();
+            res.status(200).json({"result":true,"message":"Registro actualizado"}); 
+        }).catch(async function(error){
+            console.log(error)
+            t.rollback();
+            res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+        })
+            
+    }).catch(async function(error){
+        console.log(error)
+        t.rollback();
+        res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
+    })
+}
+
+
 async function cancelShoppincar(req,res){
-    const{itemLot,accountId,isSUW}=req.body  
+    const{itemLot,shoppingCarId,shoppingCarQty,accountId,isSUW}=req.body  
     console.log(req.body)    
     const t = await model.sequelize.transaction();
     let audit=[]
@@ -15,79 +91,91 @@ async function cancelShoppincar(req,res){
         "moment": toDay, //  cuando la realizó (Fecha hora)
         "itemLot": itemLot
     });
-    console.log("itemLot.shoppingCarId");
-    console.log(itemLot.shoppingCarId);
-    return await model.shoppingCar.update({orderStatusId:6},{where:{id:itemLot.shoppingCarId},returning: true,transaction:t})
-    .then(async function (rsUpdateShpp){
-       /*  var qtyCar=rsUpdateShpp.qty||0;            
-        var qtyItem=itemLot.weight||0;  
-        var qty=qtyItem+qtyCar; */
-        // activar lote
-        await model.lots.update({isActived:true},{where:{id:itemLot.lotId},transaction:t})
-        .then(async function(rsActiveLot){
-            await model.itemLot.update({conditionId:1/* ,weight:qty */ },{where:{id:itemLot.id},transaction:t})
-            .then(async function (rsUpdateItem){           
+   
+    return await model.shoppingCar.update({orderStatusId:6},{where:{id:shoppingCarId},returning: true,transaction:t})
+    .then(async function (rsUpdateShpp){       
+        
+        //Busca lote activo actual para el articulo
+         let activeLot=await model.lots.findOne({attributes:['id'], where:{isActived:true}})
+        if(isSUW){
+            // activar lote si es SUW       
+            await model.lots.update({isActived:true},{where:{id:itemLot.lotId},transaction:t})
+                .then(async function(rsActiveLot){
+                    await model.itemLot.update({conditionId:1 },{where:{id:itemLot.id},transaction:t})
+                    .then(async function (rsUpdateItem){                         
+                        t.commit();
+                        res.status(200).json({"result":true,"message":"Orden liberada"});         
+                    }).catch(async function(error){
+                        console.log(error)
+                        t.rollback();
+                        res.status(403).json({"result":false,"message":"Algo salió mal activando item, intente nuevamente"});        
+                    })
+                }).catch(async function(error){
+                    console.log(error)
+                    t.rollback();
+                    res.status(403).json({"result":false,"message":"Algo salió mal activando lote, intente nuevamente"});        
+                })
+        }else{ // si es venta a granel 
+            await model.itemLot.findOne({attributes:['id','weight'], where:{id:itemLot.id}})
+            .then(async function(rsFnItemLot){
+                // repone el lote
+                let reposition=parseFloat(rsFnItemLot.qty)+parseFloat(shoppingCarQty)
+                await model.itemLot.update({weight:reposition}, {where:{id:itemLot.id}},{transaction:t})
+                .then(async function (rsUpdateItem){                         
                     t.commit();
                     res.status(200).json({"result":true,"message":"Orden liberada"});         
-            }).catch(async function(error){
-                console.log(error)
-                t.rollback();
-                res.status(403).json({"result":false,"message":"Algo salió mal activando item, intente nuevamente"});        
+                }).catch(async function(error){
+                    console.log(error)
+                    t.rollback();
+                    res.status(403).json({"result":false,"message":"Algo salió mal activando item, intente nuevamente"});        
+                })
             })
-        }).catch(async function(error){
-            console.log(error)
-            t.rollback();
-            res.status(403).json({"result":false,"message":"Algo salió mal activando lote, intente nuevamente"});        
-        })
-        
+        }  
     }).catch(async function(error){
         console.log(error)
         t.rollback();
         res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});        
-        
-}).catch(async function(error){
-    console.log(error)
-    t.rollback();
-    res.status(403).json({"result":false,"message":"Algo salió mal, intente nuevamente"});
 })
 }
 
-
 async function editShoppincar(req,res){
-    const{itemLotId,accountId,dispatch,isSUW,id}=req.body   // <<< Recibir isSUW    
+    const{itemLotId,accountId,dispatch,qty,isSUW,id,discount,finalWeigth}=req.body   // <<< Recibir isSUW    
+    const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     const t = await model.sequelize.transaction();
-    let SUW=JSON.parse(isSUW);
-    
     let audit=[]
     const toDay=moment().format('lll');   
     audit.push({
-        "action":"Cliente actualizó" ,// que accion se realizó        
+        "action":"Actualizó carrito" ,// que accion se realizó  
+        "people":dataToken.people.document,// quien la realizo (Nombre)      
         "account":accountId, //  quien la realizó (cuenta de usuario)
         "moment": toDay, //  cuando la realizó (Fecha hora)
-        "itemLot": itemLotId
+        "itemLot": itemLotId + "<-- Item afectado", 
+        "values":{discount,finalWeigth} // valires que actualizo
     });
-    return await model.shoppingCar.update({dispatch,isActived},{where:{id},transaction:t})
+    return await model.shoppingCar.update({discount,finalWeigth},{where:{id},transaction:t})
     .then(async function (rsUpdate){
-        await model.itemLot.findOne({attributes:['weight'],where:{id:itemLotId},transaction:t})
-        .then(async function (rsExistence){
-            console.log("Desapcho: "+dispatch);
-            if(rsExistence.weight>=parseFloat(dispatch)){
-                diff=rsExistence.weight-dispatch
-                if(diff>0){isActived=true;}
-                else{
-                    isActived=false;
+        if(!isSUW){ // Si se vende a granel
+            await model.itemLot.findOne({attributes:['weight'],where:{id:itemLotId},transaction:t})
+            .then(async function (rsExistence){           
+                if(parseFloat(rsExistence.weight).toFixed(2)>=parseFloat(finalWeigth).toFixed(2)){
+                    diff=parseFloat(rsExistence.weight).toFixed(2)-parseFloat(finalWeigth).toFixed(2)
+                    let isActived;
+                    if(diff>0){isActived=true;}
+                    else{
+                        isActived=false;
+                    }
+                    await model.itemLot.update({weight:diff,isActived },
+                        {where:{id:itemLotId},transaction:t})          
+                }else{
+                    t.rollback();                                                       
+                    res.status(403).json({"result":false,"message":"Cantidad solicitada supera lo disponible( "+rsExistence.weight+" Kg)"});                                    
                 }
-                await model.itemLot.update({weight:diff,isActived },
-                    {where:{id:itemLotId},transaction:t})          
-            }else{
+            }).catch(async function(error){ 
+                console.log(error)   
                 t.rollback();                                                       
-                res.status(403).json({"result":false,"message":"Cantidad solicitada supera lo disponible( "+rsExistence.weight+" Kg)"});                                    
-            }
-        }).catch(async function(error){ 
-            console.log(error)   
-            t.rollback();                                                       
-            res.status(403).json({"result":false,"message":"Error validando existencia, intente nuevamente"});        
-        })                        
+                res.status(403).json({"result":false,"message":"Error validando existencia, intente nuevamente"});        
+            })
+        }                                
         t.commit();
         res.status(200).json({"result":true,"message":"Registro actualizado"});         
     }).catch(async function(error){
@@ -296,4 +384,4 @@ async function AddShoppingCar(req,res){
 }
 
 
-module.exports={getShoppingCar,AddShoppingCar,editShoppincar,cancelShoppincar};
+module.exports={getShoppingCar,AddShoppingCar,editShoppincar,cancelShoppincar,editShoppincarOneField};

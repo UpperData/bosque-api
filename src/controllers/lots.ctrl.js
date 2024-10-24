@@ -363,12 +363,14 @@ async function lotEdit(req,res){
 async function lotArticle(req,res){
     const{articleId,isActived}=req.params;    
     //if (typeof (isActived) === "boolean") {}
+    let allStatuts={[Op.or]:[true,false]};
+    let oneStatuts={[Op.or]:isActived};    
     await model.lots.findAll(
     { 
         attributes: {exclude: ['audit','createdAt','updatedAt']},
         where:{
             articleId,
-            isActived
+            isActived:isActived!='*'?oneStatuts:allStatuts
         },
         order:[['isActived','DESC'],['receivedDate','DESC']],
         include:[{            

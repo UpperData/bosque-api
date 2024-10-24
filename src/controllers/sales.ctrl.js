@@ -21,10 +21,8 @@ async function userWithOrders(req,res){
 async function pendinOrders(req,res){
     const {accountId} =req.params;
     await model.shoppingCar.findAndCountAll({
-        attributes:['id', 'qty','dispatch'],
-        where:{orderStatusId:{
-            [Op.lte]: 3
-        }},
+        attributes:[['id','shoppingCarId'], 'qty','dispatch','discount','finalWeigth'],
+        where:{orderStatusId:1},
         include:[
             {
                 model:model.account,
@@ -39,11 +37,11 @@ async function pendinOrders(req,res){
             } ,
             {
                 model:model.itemLot,
-                attributes:['id', 'weight'],
+                attributes:[['id','id'], 'weight','numItem'],
                 required:true,
                  include:[{
                     model:model.lots,
-                    attributes:['id'],
+                    attributes:['id','isActived'],
                     required:true,
                     include:[{
                         model:model.article,
@@ -56,8 +54,7 @@ async function pendinOrders(req,res){
         raw:true
     }).then(async function(rsSales){        
         let total=0.0;
-        for (let index = 0; index < rsSales.count; index++) {
-            
+        for (let index = 0; index < rsSales.count; index++) {           
             if(rsSales.rows[index]["itemLot.lot.article.isSUW"]){   // weigth * precio             
                 rsSales.rows[index].subTotal=parseFloat(parseFloat(rsSales.rows[index]["itemLot.lot.article.price"]).toFixed(2) * parseFloat(rsSales.rows[index]["itemLot.weight"]).toFixed(2)).toFixed(2);
                 rsSales.rows[index]["itemLot.lot.article.price"]=parseFloat(rsSales.rows[index]["itemLot.lot.article.price"]).toFixed(2)

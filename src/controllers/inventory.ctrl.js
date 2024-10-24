@@ -3,11 +3,74 @@ const { Op } = require("sequelize");
 const serviceToken=require('./serviceToken.ctrl');
 const generals=require('./generals.ctrl');
 var moment=require('moment');
-var fs = require("fs");
 const Excel = require("exceljs");
 var path = require("path");
-const { where } = require('sequelize/lib/sequelize');
 
+async function stockByArticle(req,res){    // articulos con item en venta
+    const {articleId} =req.params
+    await model.article.findAndCountAll({
+        attributes:[['id','articleId'],'name','image','isSUW','price'],
+        where:{id:articleId,isActived:true},
+        include:[{
+            model:model.lots,
+                attributes:['id'],
+                where:{isActived:true},
+                required:true,
+                include:[{
+                    model:model.itemLot,
+                        attributes:['id','numItem','weight','note'],
+                        where:{conditionId:1},
+                        required:true
+                }]
+        }],raw:true
+    }).then(async function (rsArticleStck) {       
+        for (let index = 0; index < rsArticleStck.rows.length; index++) {
+            rsArticleStck.rows[index].id=rsArticleStck.rows[index]['lots.itemLots.id']
+            
+        }              
+        res.status(200).json({"result":true,"message":"Busqueda satisfatoria","data":rsArticleStck});
+    }).catch(async function(error){    
+        console.log(error)        
+        res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando registro"}});        
+    })
+}
+
+async function articleOnStockList(req,res){     // articulos con item en venta
+    
+    await model.article.findAndCountAll({
+        attributes:['id','name','price'],
+        where:{isActived:true},
+        include:[{
+            model:model.lots,
+                attributes:['id'],
+                where:{isActived:true},
+                required:true,
+                include:[{
+                    model:model.itemLot,
+                        attributes:['id'],
+                        where:{conditionId:1},
+                        required:true
+                }]
+        }],raw:true
+    }).then(async function (rsArticleStck) {        
+        let articlesList=[]
+        articlesList.rows=[]
+        articlesList.count=null        
+        for (let index = 0; index < rsArticleStck.rows.length; index++) {
+            articlesList.rows.push({"id":rsArticleStck.rows[index].id,"name":rsArticleStck.rows[index].name,"price":rsArticleStck.rows[index].price})
+        }  
+         
+        var datos = articlesList.rows.filter((data, index, j) => 
+            index === j.findIndex((t) => (t.id === data.id && t.nom === data.nom))
+          )
+          rsArticleStck.count= datos.length || 0;
+          rsArticleStck.rows=datos;               
+        res.status(200).json({"result":true,"message":"Busqueda satisfatoria","data":rsArticleStck});
+    }).catch(async function(error){    
+        console.log(error)        
+        res.status(403).json({"data":{"result":false,"message":"Algo salió mal buscando registro"}});        
+    })
+}
 async function downloadInventorySheet(req, res) {
     
     try {
@@ -25,9 +88,7 @@ async function downloadInventorySheet(req, res) {
       workbook.xlsx
         .writeFile("newSaveeee.xlsx")
         .then(response => {
-          console.log("file is written");
-          console.log(path.join(__dirname, "../newSaveeee.xlsx"));
-          console.log(path.join(__dirname, "../newSaveeee.xlsx"));
+         
           res.sendFile(path.join(__dirname, "..\newSaveeee.xlsx"));
         })
         .catch(err => {
@@ -40,8 +101,7 @@ async function downloadInventorySheet(req, res) {
 
 
 async function inventoryArticle(req,res){ // optiene el inventario actual, hoja de inventario
-    const {articleId} =req.params;   
-    console.log(req.params) ;
+    const {articleId} =req.params;       
     await model.article.findAll({
         attributes:['id','name','description','isActived','price','minStock','isPublished'],        
         where:{id:articleId},
@@ -308,7 +368,7 @@ async function articleNew(req,res){
     })
 }
 async function articleUpdate(req,res){
-    const dataToken=await generals.currentAccount(req.header('Authorization').replace('Bearer ', ''));
+    const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     const{id,name,description,isActived,price,minStock,image,isSUW,isPublished}=req.body;    
     const t=await model.sequelize.transaction();    
     let audit=[]   
@@ -487,8 +547,7 @@ async function inventoryTotal(req,res){ // optiene el inventario actual, hoja de
             rsInventory[index].dataValues.dolarValue=parseFloat(rsInventory[index].price).toFixed(2); //agrega precio en dolares segun el valor actual
             totalPriceInventory=totalPriceInventory+( parseFloat(rsInventory[index].price).toFixed(2) * 
                             parseFloat(rsInventory[index].dataValues.almacen=='-'?0:rsInventory[index].dataValues.almacen).toFixed(2));
-            console.log("Precio:"+ parseFloat(rsInventory[index].price).toFixed(2));
-            console.log("Cantidad:"+ parseFloat(rsInventory[index].dataValues.almacen).toFixed(2));
+            
         }    
         //rsInventory.push({bolivaresTotalInventory:totalPriceInventory.toFixed(2)});
         //rsInventory.push({dolarTotalInventory:Number(totalPriceInventory/dolar).toFixed(2)});     
@@ -557,7 +616,8 @@ async function returnArticleArray(req,res){
     })
 
 }
-module.exports={assignmentNew
+module.exports={
+    assignmentNew
     ,assignmentByDoctor
     ,assignmentUpdate
     ,articleNew
@@ -569,7 +629,8 @@ module.exports={assignmentNew
     ,returnArticleArray
     ,inventoryGet
     ,currentArticleStock
-    ,inventoryArticle
+    ,inventoryArticle // inventario  por articulo
     ,downloadInventorySheet
-
+    ,articleOnStockList // articulos en venta
+    ,stockByArticle  // disponibles por articulos
 };

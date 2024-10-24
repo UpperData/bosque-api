@@ -22,7 +22,9 @@ module.exports = (sequelize, DataTypes) => {
     dispatch: DataTypes.STRING,
     qty : DataTypes.STRING,
     orderStatusId:DataTypes.INTEGER,
-    audit:DataTypes.JSONB
+    audit:DataTypes.JSONB,
+    discount:DataTypes.STRING,
+    finalWeigth:DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'shoppingCar',

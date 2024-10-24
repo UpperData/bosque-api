@@ -1,8 +1,7 @@
 const model=require('../db/models/index');
-const { Op } = require("sequelize");
-
 async function getRole(req,res){ 
     const {id}=req.params;
+    
     if(id!='*'){
         //Busca un role
         return await model.role.findOne({

@@ -39,10 +39,12 @@
     "path": "^0.12.7",
     "pg": "^8.3.0",
     "pg-hstore": "^2.3.4",
+    "qrcode-terminal": "^0.12.0",
     "request": "^2.88.2",
     "revalidator": "^0.3.1",
     "sequelize": "^6.15.0",
-    "twilio": "^5.2.2"
+    "twilio": "^3.30.0",
+    "whatsapp-web.js": "^1.16.4-alpha.0"
   },
   "devDependencies": {
     "sequelize-cli": "^6.4.1"

@@ -9,7 +9,7 @@ const { Op } = require("sequelize");
 require ('dotenv').config();
 async function registerAccount(req,res){
     const {email,people,memberships,photo,phone}=req.body      
-      //general password 8 dogotpd
+      //general password 8 digitos
     var now=new Date();                  
     //let pass= crypto.randomBytes(4).toString('hex')+now.getTime();
     //pass = pass.slice(-6);
@@ -17,14 +17,14 @@ async function registerAccount(req,res){
     //genera username
     let name
     var aleatorio=crypto.randomBytes(8).toString('hex')+now.getTime();    
-    name=aleatorio.slice(0,2)+email.slice(0,-12)+aleatorio.slice(aleatorio.length-3,aleatorio.length);       
+    name=aleatorio.slice(0,2)+people.document.lastName+aleatorio.slice(aleatorio.length-3,aleatorio.length);       
     const dataToken=await serviceToken.dataTokenGet(req.header('Authorization').replace('Bearer ', '')); 
     const t = await model.sequelize.transaction();  
     let audit=[]
     audit.push({"people":dataToken.people});
     audit.push({"account":dataToken.account});
             
-    // OPtiene todos los administradores del sistema (email)     
+    // Optiene todos los administradores del sistema (email)     
     await model.account.create( {email,photo,phone,name,pass,people,creater:audit,secret:null, token:"null",isConfimr:true,isActived:true},{transaction:t})
     .then(async function(rsAccount){   
         
@@ -42,11 +42,11 @@ async function registerAccount(req,res){
          
         //Fin aplica membresias
         await model.accountRole.findAll({
-            attributes:['id'],
+            attributes:['id','accountId','roleId'],
             where:{roleId:5}
             }).then (async function(rsAccountRole){
                 for (let index = 0; index < rsAccountRole.length; index++) {
-                    //console.log(rsAccountRole[index].id);
+                    
                     if(dataToken.people){
                         await model.notification.create({ 
                             from:process.env.EMAIL_ADMIN,
@@ -55,10 +55,10 @@ async function registerAccount(req,res){
                                 text:dataToken.people.firstName+" "+dataToken.people.lastName + " ha creado una nueva cuenta de usuario con el nombre "+rsAccount.name+"("+rsAccount.id+")",
                                 title:"Nueva cuenta" + process.env.COMPANY + "creada satisfactoriamente",
                                 subtitle:rsAccount.name+"("+rsAccount.id+")",
-                                link:"http://"+process.env.HOST_FRONT+"/account/details/"+rsAccount.id
+                               // link:"http://"+process.env.HOST_FRONT+"/account/details/"+rsAccount.id
                                 },
                             read:false,
-                            accountRolesId:rsAccountRole[index].id
+                            accountId:rsAccountRole[index].accountId
                         })
                     }
                     
@@ -309,7 +309,7 @@ async function passwordUpdate(req,res){
         await  bcrypt.compare(currentPassword,rsAccount.pass).then(async function(rsValid){
             if(rsValid){
                 return await model.account.update({pass:newPassword},{where:{id:dataToken.account.id}},{transaction:t}).then(async function(rsNewPassword){ //Actualiza password                    
-                    const urlRestore=process.env.HOST_FRONT+"/login" 
+                    /* const urlRestore=process.env.HOST_FRONT+"/login" 
                     var sendMail= await utils.sendMail({
                         from:"CEMA OnLine <" + process.env.EMAIL_MANAGER +	'>',
                         to:rsAccount.email,
@@ -319,20 +319,20 @@ async function passwordUpdate(req,res){
                         subtitle:null,                
                         action:urlRestore,
                         actionLabel:"Iniciar Sesión"
-                    });
-                    if(sendMail){
+                    }); */
+                    //if(sendMail){
                         t.commit();
                         res.status(200).json({data:{"result":true,"message":"Password actualizado satisfactoriamente"}});    
-                    }else{
+                    /* }else{
                         res.status(403).json({data:{"result":false,"message":"Algo salió mal procesando su solicitud, intente nuevamente"}});       
-                    }                          
+                    }   */                        
                 }).catch(async function(error){ 
                     console.log(error);                                       
                     t.rollback();
                     res.status(403).json({data:{"result":false,"message":error.message}});        
                 })
-            }else{                
-                res.status(403).json({data:{"result":false,"message":"Password actual incorrecto"}});  
+            }else{        
+                res.status(200).json({data:{"result":false,"message":"Password actual incorrecto"}});  
             }
         }).catch(async function(error){
             console.log(error);
@@ -618,8 +618,8 @@ async function emailUpdate(req,res){
                     const urlRestore=process.env.HOST_BACK+"/email/verify/"+token;
                     t.commit(); 
                     
-                    var sendMail= await utils.sendMail({ // envia email para veridicar cuenta
-                        from:"CEMA OnLine <" + process.env.EMAIL_MANAGER +	'>',
+                    /* var sendMail= await utils.sendMail({ // envia email para veridicar cuenta
+                        from:"Bosque marino <" + process.env.EMAIL_MANAGER +	'>',
                         to:rsAccount.email,
                         subject:"Cambio de Email",
                         text:"Haga clic en el enlace para certificar el Email ",
@@ -629,12 +629,12 @@ async function emailUpdate(req,res){
                         actionLabel:"Certificar Email"
                     });
                     
-                    if(sendMail){
+                    if(sendMail){ */
                         t.commit(); // actializa email
-                        res.status(200).json({data:{"result":true,"message":"Operación procesada satisfactoriamente, recibirá  un Email para certificar el cambio"}});    
-                    }else{
+                        res.status(200).json({data:{"result":true,"message":"Email actualizado"}});    
+                    /* }else{
                         res.status(403).json({data:{"result":false,"message":"Algo salió mal procesando su solicitud, intente nuevamente"}});       
-                    }   
+                    }  */  
                             
                 }).catch(async function(error){
                     console.log(error)
