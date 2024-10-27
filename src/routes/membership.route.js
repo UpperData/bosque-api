@@ -7,5 +7,6 @@ const forceBrute=require('../controllers/middleware/noBrute.ctrl');
 router.post('/membeRship/asing/revoque/',forceBrute.notBruteSecure,auth.autorizedRole([5]),membership.addMembership);// asigna o revoca membresia
 router.get('/memBeRship/Get/Byemail/:email',forceBrute.notBruteSecure,auth.autorizedRole(['*']),membership.getRoleByEmail);// obtiene membresia por email
 router.get('/memBeRship/Get/ByPhone/:phone',forceBrute.notBruteSecure,auth.autorizedRole([5]),membership.getRoleByPhone);// obtiene membresia por phone
+router.post('/memBeRship/Get/ByGroup/',forceBrute.notBruteSecure,auth.autorizedRole([5]),membership.getPhoneByGroup);// obtiene CUENTAS PERTENECIENTES A UN GRUPO
 
 module.exports=router;

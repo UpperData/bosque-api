@@ -151,4 +151,41 @@ async function getRoleByPhone(req,res){
 		res.status(403).json({"data":{"result":false,"message":error.message}}); 		
 	})	
 }
-module.exports={getRoleByAccount,add,addMembership,getRoleByEmail,getRoleByPhone};
+
+async function getPhoneByGroup(req,res){
+	const {group}=req.body
+	let rsContacts=[]
+	for (let index = 0; index < group.length; index++) {		
+		await models.account.findAll({
+			attributes:[['id','accountId'],'phone','email','people'],
+			include:[
+				{
+					model:models.accountRole,
+					attributes:[['id','accountRoleId'],'roleId'],
+					where:{roleId:group[index]}
+	
+				}
+			]
+		}).then(async function(rsAccount){			
+			rsAccount.forEach(element => {
+				rsContacts.push({"accountId":element.accountId,"phone":element.phone,"personName":element.people.document.firstName+" "+element.people.document.lastName,"email":rsAccount.email}) 	
+			});				
+	
+		}).catch(async function(error){		
+			console.log(error);					
+		})	
+	}
+	// elimina duplicados
+	var datos = rsContacts.filter((data, index, j) => 
+		index === j.findIndex((t) => (t.phone === data.phone))
+	)
+	res.status(200).json({"result":true,"message":"resultado de busqueda","data":datos}); 
+}
+module.exports={
+	getRoleByAccount,
+	add,
+	addMembership,
+	getRoleByEmail,
+	getRoleByPhone,
+	getPhoneByGroup // todas los telefonos, email y people de un grupo
+};
