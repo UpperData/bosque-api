@@ -3,7 +3,7 @@
     "username": "upperdata",
     "password": "(1Juan-1:9*",
     "database": "go-dev-07262023",
-    "host":     "127.0.0.1",
+    "host":     "http://127.0.0.1",
     "dialect":  "postgresql"
   },
   "test": {
