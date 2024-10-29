@@ -3,7 +3,7 @@
     "username": "upperdata",
     "password": "(1Juan-1:9*",
     "database": "go-dev-07262023",
-    "host":     "http://127.0.0.1",
+    "host":     "http://tubosquemarino.com:4094",
     "dialect":  "postgresql"
   },
   "test": {
@@ -14,10 +14,10 @@
     "dialect": "postgresql"
   },
   "production": {
-    "username": "go",
-    "password": "Y¿0,45/uD&0.",
-    "database": "cema11022022-prod",
-    "host": "127.0.0.1",
-    "dialect": "postgresql"
+    "username": "bosque",
+    "password": "HH#yY¿96,b7",
+    "database": "go-dev-07262023",
+    "host":     "http://tubosquemarino.com:4094",
+    "dialect":  "postgresql"
   }
 }
