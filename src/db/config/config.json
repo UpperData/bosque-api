@@ -3,7 +3,7 @@
     "username": "upperdata",
     "password": "(1Juan-1:9*",
     "database": "go-dev-07262023",
-    "host":     "http://tubosquemarino.com",
+    "host":     "147.135.93.82",
     "dialect":  "postgresql"
   },
   "test": {
@@ -17,7 +17,7 @@
     "username": "bosque",
     "password": "HH#yY¿96,b7",
     "database": "go-dev-07262023",
-    "host":     "http://tubosquemarino.com",
+    "host":     "http://192.99.221.40",
     "dialect":  "postgresql"
   }
 }
