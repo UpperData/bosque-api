@@ -32,7 +32,6 @@ module.exports = {
       },
       dispatch: {
         type: Sequelize.JSONB,
-        allowNull: false,
       },
       discount:{
         type:Sequelize.STRING

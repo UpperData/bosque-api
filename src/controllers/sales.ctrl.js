@@ -7,9 +7,8 @@ async function userWithOrders(req,res){
         attributes:['id','people', 'phone','name'],
         include:[{
             model:model.shoppingCar,
-                attributes:['id'],
+                attributes:['id','orderStatusId'],
                 required:true,
-
         }]
     }).then(async function(rsClientes){
         res.status(200).json({"result":true,"data":rsClientes});    
@@ -39,6 +38,7 @@ async function pendinOrders(req,res){
                 model:model.itemLot,
                 attributes:[['id','id'], 'weight','numItem'],
                 required:true,
+                //where:{conditionId:2},
                  include:[{
                     model:model.lots,
                     attributes:['id','isActived'],
